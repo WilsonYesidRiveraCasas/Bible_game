@@ -17,6 +17,12 @@ de confeti al acertar, efectos visuales al fallar, barra de progreso con hitos y
 registro de récord local. Un solo jugador.
 URL: https://wilsonyesidriveracasas.github.io/Bible_game/biblia-ninos.html
 
+
+### Ahorcado Bíblico (ahorcado_biblico.html)
+Juego del ahorcado con más de 800 palabras bíblicas (personajes, lugares, libros, términos). 10 vidas, temporizador, sonidos y animaciones. Teclado en pantalla y físico. Las palabras no se repiten entre partidas gracias a localStorage.
+URL: https://wilsonyesidriveracasas.github.io/Bible_game/ahorcado_biblico.html
+
+
 ## Idioma
 Todos los juegos están en español (es-CO).
 

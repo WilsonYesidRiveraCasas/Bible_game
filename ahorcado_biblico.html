@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🙏 El Ahorcado Bíblico</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:#1a0533;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:8px;overflow-x:hidden}
+.bg-stars{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#1a0533 0%,#0d1b4b 50%,#1a0533 100%);overflow:hidden}
+.star{position:absolute;border-radius:50%;animation:twinkle var(--dur,2s) infinite alternate;background:white}
+@keyframes twinkle{0%{opacity:.2;transform:scale(1)}100%{opacity:1;transform:scale(1.3)}}
+.float-emoji{position:fixed;font-size:2rem;animation:floatUp var(--fdur,8s) linear infinite;opacity:.15;user-select:none;z-index:0}
+@keyframes floatUp{0%{transform:translateY(100vh) rotate(0deg);opacity:0}10%{opacity:.15}90%{opacity:.15}100%{transform:translateY(-10vh) rotate(360deg);opacity:0}}
+
+#game-wrapper{position:relative;z-index:1;width:100%;max-width:680px;background:rgba(255,255,255,0.97);border-radius:28px;box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 0 3px rgba(255,200,50,.4);overflow:hidden}
+
+header{background:linear-gradient(135deg,#7c3aed,#a855f7,#ec4899);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='20' fill='none' stroke='rgba(255,255,255,0.08)' stroke-width='1'/%3E%3C/svg%3E")}
+.header-title{font-family:'Fredoka One',cursive;font-size:clamp(1.1rem,4vw,1.6rem);color:white;text-shadow:2px 2px 0 rgba(0,0,0,.2);position:relative}
+.header-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.35);border-radius:20px;padding:5px 13px;color:white;font-weight:700;font-size:.85rem;backdrop-filter:blur(4px)}
+
+.game-body{padding:14px;display:flex;flex-direction:column;gap:12px}
+.top-row{display:flex;gap:12px;align-items:flex-start}
+
+.canvas-card{flex-shrink:0;background:linear-gradient(160deg,#f0e6ff,#fce7f3);border-radius:20px;border:3px solid #e879f9;padding:6px;box-shadow:0 6px 20px rgba(168,85,247,.25),inset 0 2px 8px rgba(255,255,255,.6);position:relative;overflow:hidden}
+.canvas-card::after{content:'⛪';position:absolute;bottom:4px;right:6px;font-size:1.4rem;opacity:.25}
+#hangman-canvas{display:block}
+
+.right-col{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
+.category-row{display:flex;align-items:center;gap:6px}
+.cat-badge{font-family:'Fredoka One',cursive;font-size:.8rem;letter-spacing:.5px;padding:5px 14px;border-radius:20px;color:white;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.cat-Libro{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.cat-Personaje{background:linear-gradient(135deg,#3b82f6,#1d4ed8)}
+.cat-Lugar{background:linear-gradient(135deg,#10b981,#059669)}
+.cat-Término{background:linear-gradient(135deg,#8b5cf6,#6d28d9)}
+.cat-Animal{background:linear-gradient(135deg,#ef4444,#b91c1c)}
+.cat-Objeto{background:linear-gradient(135deg,#ec4899,#be185d)}
+.cat-Atributo{background:linear-gradient(135deg,#06b6d4,#0e7490)}
+
+.hint-box{background:linear-gradient(135deg,#eff6ff,#dbeafe);border-left:4px solid #3b82f6;border-radius:10px;padding:8px 12px;font-size:.78rem;color:#1e40af;font-style:italic;font-weight:600}
+.hearts-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.heart{font-size:1.4rem;transition:all .4s cubic-bezier(.34,1.56,.64,1);filter:drop-shadow(0 2px 4px rgba(239,68,68,.4))}
+.heart.lost{font-size:.9rem;opacity:.3;filter:grayscale(1);transform:scale(.75)}
+
+.wrong-box{background:linear-gradient(135deg,#fff1f2,#fecdd3);border:2px solid #fca5a5;border-radius:12px;padding:7px 12px;min-height:38px}
+.wrong-box .label{font-size:.72rem;color:#b91c1c;font-weight:700}
+.wrong-chip{display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#ef4444,#b91c1c);color:white;border-radius:8px;width:28px;height:28px;margin:2px;font-weight:800;font-size:.85rem;box-shadow:0 3px 8px rgba(239,68,68,.35);animation:popIn .35s cubic-bezier(.34,1.56,.64,1)}
+
+#word-display{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;padding:8px 4px}
+.letter-box{width:clamp(30px,7.5vw,44px);height:clamp(38px,9vw,52px);border-radius:10px;background:linear-gradient(160deg,#f5f3ff,#ede9fe);border:2.5px solid #a78bfa;display:flex;align-items:center;justify-content:center;font-family:'Fredoka One',cursive;font-size:clamp(1rem,4vw,1.5rem);color:#5b21b6;box-shadow:0 4px 12px rgba(139,92,246,.2),inset 0 1px 3px rgba(255,255,255,.8);position:relative;overflow:hidden;transition:transform .2s}
+.letter-box.revealed{background:linear-gradient(160deg,#d1fae5,#a7f3d0);border-color:#10b981;color:#065f46;animation:letterReveal .5s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 16px rgba(16,185,129,.35),inset 0 1px 3px rgba(255,255,255,.8)}
+.letter-box::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#a78bfa,#ec4899);border-radius:0 0 8px 8px}
+.letter-box.revealed::after{background:linear-gradient(90deg,#10b981,#34d399)}
+
+#keyboard-container{background:linear-gradient(160deg,#f8fafc,#f1f5f9);border-radius:18px;border:2px solid #e2e8f0;padding:12px 8px;box-shadow:inset 0 2px 8px rgba(0,0,0,.05)}
+.key-row{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-bottom:5px}
+.key-row:last-child{margin-bottom:0}
+.key-btn{width:clamp(30px,7.8vw,42px);height:clamp(30px,7.8vw,42px);border-radius:10px;border:none;background:linear-gradient(160deg,white,#f1f5f9);color:#5b21b6;font-family:'Fredoka One',cursive;font-size:clamp(.75rem,2.5vw,.95rem);cursor:pointer;box-shadow:0 4px 0 #c4b5fd,0 6px 12px rgba(124,58,237,.15);transition:all .12s;touch-action:manipulation;position:relative;overflow:hidden}
+.key-btn::before{content:'';position:absolute;inset:0;border-radius:10px;background:linear-gradient(160deg,rgba(255,255,255,.8),transparent)}
+.key-btn:hover:not(:disabled){background:linear-gradient(160deg,#ede9fe,#ddd6fe);transform:translateY(-3px);box-shadow:0 7px 0 #a78bfa,0 10px 20px rgba(124,58,237,.25);color:#4c1d95}
+.key-btn:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 #c4b5fd}
+.key-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.key-btn.correct{background:linear-gradient(160deg,#d1fae5,#a7f3d0)!important;color:#065f46!important;box-shadow:0 4px 0 #6ee7b7,0 6px 12px rgba(16,185,129,.25)!important}
+.key-btn.wrong{background:linear-gradient(160deg,#fee2e2,#fecaca)!important;color:#991b1b!important;box-shadow:0 4px 0 #fca5a5,0 6px 12px rgba(239,68,68,.2)!important}
+
+#feedback-box{border-radius:16px;padding:10px 16px;text-align:center;font-weight:700;font-size:.95rem;transition:all .25s;min-height:44px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:2px solid #c4b5fd;color:#5b21b6}
+#feedback-box.correct-fb{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-color:#34d399;color:#065f46}
+#feedback-box.wrong-fb{background:linear-gradient(135deg,#fee2e2,#fecaca);border-color:#f87171;color:#991b1b}
+
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:100;border-radius:28px;padding:24px 20px;text-align:center;opacity:0;pointer-events:none;transition:opacity .4s}
+.overlay.active{opacity:1;pointer-events:all}
+
+#start-screen{background:linear-gradient(160deg,rgba(124,58,237,.97),rgba(168,85,247,.97),rgba(236,72,153,.97))}
+#start-screen .big-icon{font-size:4.5rem;animation:iconBounce 2s infinite}
+@keyframes iconBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+#start-screen h1{font-family:'Fredoka One',cursive;font-size:clamp(1.8rem,7vw,2.8rem);color:white;text-shadow:3px 3px 0 rgba(0,0,0,.2);line-height:1.1}
+#start-screen p{color:rgba(255,255,255,.9);font-size:.95rem;max-width:360px;line-height:1.7;font-weight:600}
+.start-btn{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:white;border:none;border-radius:30px;padding:15px 40px;font-family:'Fredoka One',cursive;font-size:1.3rem;cursor:pointer;box-shadow:0 8px 0 #d97706,0 12px 30px rgba(251,191,36,.4);transition:all .15s;animation:btnPulse 2s infinite}
+.start-btn:hover{transform:translateY(-3px);box-shadow:0 11px 0 #d97706,0 16px 35px rgba(251,191,36,.5)}
+.start-btn:active{transform:translateY(4px);box-shadow:0 4px 0 #d97706}
+@keyframes btnPulse{0%,100%{box-shadow:0 8px 0 #d97706,0 12px 30px rgba(251,191,36,.4)}50%{box-shadow:0 8px 0 #d97706,0 12px 40px rgba(251,191,36,.7)}}
+
+#win-screen{background:linear-gradient(160deg,rgba(5,150,105,.97),rgba(16,185,129,.97))}
+#win-screen h2{font-family:'Fredoka One',cursive;font-size:clamp(2rem,8vw,3rem);color:white;text-shadow:3px 3px 0 rgba(0,0,0,.15)}
+#lose-screen{background:linear-gradient(160deg,rgba(127,29,29,.97),rgba(185,28,28,.97))}
+#lose-screen h2{font-family:'Fredoka One',cursive;font-size:clamp(1.6rem,6vw,2.4rem);color:white;text-shadow:3px 3px 0 rgba(0,0,0,.2)}
+.word-reveal-big{background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.4);border-radius:18px;padding:12px 26px;font-family:'Fredoka One',cursive;font-size:clamp(1.4rem,5vw,2.2rem);color:white;letter-spacing:5px;text-shadow:1px 1px 0 rgba(0,0,0,.15);word-break:break-all}
+.overlay-stats{color:rgba(255,255,255,.9);font-weight:700;font-size:.95rem}
+.overlay-btn{background:white;border:none;border-radius:30px;padding:14px 36px;font-family:'Fredoka One',cursive;font-size:1.15rem;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,.15),0 10px 24px rgba(0,0,0,.2);transition:all .15s}
+.overlay-btn:hover{transform:translateY(-3px)}
+.overlay-btn:active{transform:translateY(2px)}
+#win-screen .overlay-btn{color:#059669}
+#lose-screen .overlay-btn{color:#b91c1c}
+
+@keyframes letterReveal{0%{transform:scale(0) rotateY(90deg);opacity:0}60%{transform:scale(1.15) rotateY(-10deg)}100%{transform:scale(1) rotateY(0);opacity:1}}
+@keyframes popIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.25)}100%{transform:scale(1);opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-9px) rotate(-2deg)}30%{transform:translateX(9px) rotate(2deg)}45%{transform:translateX(-7px)}60%{transform:translateX(7px)}75%{transform:translateX(-4px)}}
+@keyframes feedbackPop{0%{transform:scale(.92);opacity:0}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+@keyframes confettiFall{0%{transform:translateY(-30px) rotate(0deg);opacity:1}100%{transform:translateY(700px) rotate(720deg);opacity:0}}
+@keyframes starFloat{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-80px) scale(1.8);opacity:0}}
+@keyframes ripple{to{transform:translate(-50%,-50%) scale(2.5);opacity:0}}
+.shake{animation:shake .5s ease}
+.feedback-anim{animation:feedbackPop .35s ease}
+.star-burst{position:absolute;pointer-events:none;font-size:1.6rem;animation:starFloat .9s ease-out forwards;z-index:50}
+.confetti-piece{position:absolute;border-radius:3px;animation:confettiFall var(--dur,2.5s) linear forwards;z-index:110}
+
+@media(max-width:480px){.top-row{flex-direction:column;align-items:center}.canvas-card{align-self:center}}
+</style>
+</head>
+<body>
+<div class="bg-stars" id="bg"></div>
+
+<div id="game-wrapper">
+  <header>
+    <div class="header-title">🙏 El Ahorcado Bíblico</div>
+    <div class="header-right">
+      <div class="pill">⏱️ <span id="timer-display">00:00</span></div>
+      <div class="pill">🏆 <span id="score-count">0</span></div>
+    </div>
+  </header>
+
+  <div class="game-body">
+    <div class="top-row">
+      <div class="canvas-card">
+        <canvas id="hangman-canvas" width="165" height="190"></canvas>
+      </div>
+      <div class="right-col">
+        <div class="category-row">
+          <span class="cat-badge cat-Personaje" id="category-badge">📖 Categoría</span>
+        </div>
+        <div class="hint-box" id="hint-box">💡 Aquí aparecerá la pista...</div>
+        <div class="hearts-row" id="attempts-row"></div>
+        <div class="wrong-box">
+          <span class="label">Letras incorrectas: </span>
+          <span id="wrong-chips"></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="word-display"></div>
+
+    <div id="keyboard-container">
+      <div class="key-row" id="row1"></div>
+      <div class="key-row" id="row2"></div>
+      <div class="key-row" id="row3"></div>
+    </div>
+
+    <div id="feedback-box">✨ Presiona una letra para comenzar</div>
+  </div>
+
+  <div class="overlay active" id="start-screen">
+    <div class="big-icon">📖</div>
+    <h1>El Ahorcado Bíblico</h1>
+    <p>¡Adivina palabras de la Biblia! Personajes, libros, lugares, animales y más.<br>¡Tienes 10 ❤️ intentos! ✏️ Escribe desde el teclado o pulsa las letras.</p>
+    <button class="start-btn" id="start-btn">¡Jugar! 🚀</button>
+  </div>
+
+  <div class="overlay" id="win-screen">
+    <div style="font-size:3.5rem" id="win-emoji">🎉</div>
+    <h2>¡GANASTE! 🏆</h2>
+    <div class="word-reveal-big" id="win-word-display"></div>
+    <div class="overlay-stats" id="win-stats"></div>
+    <button class="overlay-btn" id="play-again-win">¡Otra palabra! 🎮</button>
+  </div>
+
+  <div class="overlay" id="lose-screen">
+    <div style="font-size:3rem">😢</div>
+    <h2>¡Se completó el ahorcado!</h2>
+    <div class="overlay-stats">La palabra era:</div>
+    <div class="word-reveal-big" id="lose-word-display"></div>
+    <div class="overlay-stats" id="lose-stats"></div>
+    <button class="overlay-btn" id="play-again-lose">¡Intentar de nuevo! 💪</button>
+  </div>
+</div>
+
+<script>
+// ── FONDO ANIMADO ──────────────────────────────────────────
+(function(){
+  const bg=document.getElementById('bg');
+  for(let i=0;i<80;i++){
+    const s=document.createElement('div');s.className='star';
+    const sz=Math.random()*3+1;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${1.5+Math.random()*3}s;animation-delay:${Math.random()*4}s`;
+    bg.appendChild(s);
+  }
+  ['✨','⭐','🌟','📖','🕊️','🙏','✝️','🌈','💫'].forEach((e,i)=>{
+    const el=document.createElement('div');el.className='float-emoji';el.textContent=e;
+    el.style.cssText=`left:${(i/9)*100+Math.random()*5}%;--fdur:${7+Math.random()*8}s;animation-delay:${Math.random()*8}s`;
+    document.body.appendChild(el);
+  });
+})();
+
+// ── AUDIO ─────────────────────────────────────────────────
+let audioCtx=null;
+function getAudio(){if(!audioCtx)try{audioCtx=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}return audioCtx}
+function tone(freq,type,dur,vol){
+  const ctx=getAudio();if(!ctx)return;
+  const o=ctx.createOscillator(),g=ctx.createGain();
+  o.connect(g);g.connect(ctx.destination);
+  o.type=type;o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+dur);
+  o.start();o.stop(ctx.currentTime+dur);
+}
+const playCorrect=()=>{tone(523,'sine',.1,.15);setTimeout(()=>tone(659,'sine',.1,.15),100);setTimeout(()=>tone(784,'sine',.15,.15),200)};
+const playWrong=()=>{tone(220,'sawtooth',.08,.12);setTimeout(()=>tone(196,'sawtooth',.15,.12),90)};
+const playWin=()=>[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,'sine',.2,.2),i*120));
+const playLose=()=>[330,294,262].forEach((f,i)=>setTimeout(()=>tone(f,'square',.25,.15),i*150));
+
+// ── PALABRAS (800+) ────────────────────────────────────────
+const WORDS=[
+  {w:'GENESIS',c:'Libro',h:'El primer libro de la Biblia'},{w:'EXODO',c:'Libro',h:'La salida de Egipto'},{w:'LEVITICO',c:'Libro',h:'Las leyes del sacerdocio'},{w:'NUMEROS',c:'Libro',h:'El censo del pueblo de Israel'},{w:'DEUTERONOMIO',c:'Libro',h:'La segunda ley de Moisés'},{w:'JOSUE',c:'Libro',h:'La conquista de Canaán'},{w:'JUECES',c:'Libro',h:'Los líderes de Israel antes de los reyes'},{w:'RUT',c:'Libro',h:'Una historia de lealtad y amor'},{w:'ESDRAS',c:'Libro',h:'El regreso del exilio a Jerusalén'},{w:'NEHEMIAS',c:'Libro',h:'La reconstrucción del muro de Jerusalén'},{w:'ESTER',c:'Libro',h:'Una reina que salvó a su pueblo'},{w:'JOB',c:'Libro',h:'Un hombre que sufrió pero confió en Dios'},{w:'SALMOS',c:'Libro',h:'Canciones y oraciones a Dios'},{w:'PROVERBIOS',c:'Libro',h:'Sabiduría para la vida'},{w:'ECLESIASTES',c:'Libro',h:'Reflexión sobre el sentido de la vida'},{w:'CANTARES',c:'Libro',h:'El canto de amor más bello'},{w:'ISAIAS',c:'Libro',h:'El profeta que anunció al Mesías'},{w:'JEREMIAS',c:'Libro',h:'El profeta que lloró por Jerusalén'},{w:'LAMENTACIONES',c:'Libro',h:'El llanto por Jerusalén destruida'},{w:'EZEQUIEL',c:'Libro',h:'Visiones del trono de Dios'},{w:'DANIEL',c:'Libro',h:'El joven en el foso de los leones'},{w:'OSEAS',c:'Libro',h:'El amor de Dios como esposo fiel'},{w:'JOEL',c:'Libro',h:'La promesa del Espíritu Santo'},{w:'AMOS',c:'Libro',h:'La justicia social en el AT'},{w:'ABDIAS',c:'Libro',h:'El libro más corto del AT'},{w:'JONAS',c:'Libro',h:'El profeta tragado por un pez'},{w:'MIQUEAS',c:'Libro',h:'La profecía del nacimiento en Belén'},{w:'NAHUM',c:'Libro',h:'La destrucción de Nínive'},{w:'HABACUC',c:'Libro',h:'La fe en tiempos difíciles'},{w:'SOFONIAS',c:'Libro',h:'El día del Señor'},{w:'AGEO',c:'Libro',h:'La reconstrucción del templo'},{w:'ZACARIAS',c:'Libro',h:'Visiones del futuro de Israel'},{w:'MALAQUIAS',c:'Libro',h:'El último profeta del AT'},{w:'MATEO',c:'Libro',h:'El evangelio para judíos'},{w:'MARCOS',c:'Libro',h:'El evangelio más corto y rápido'},{w:'LUCAS',c:'Libro',h:'El evangelio del médico'},{w:'JUAN',c:'Libro',h:'El evangelio del amor'},{w:'HECHOS',c:'Libro',h:'Los actos de los apóstoles'},{w:'ROMANOS',c:'Libro',h:'La salvación por fe'},{w:'GALATAS',c:'Libro',h:'La libertad en Cristo'},{w:'EFESIOS',c:'Libro',h:'La iglesia, cuerpo de Cristo'},{w:'FILIPENSES',c:'Libro',h:'El gozo en toda circunstancia'},{w:'COLOSENSES',c:'Libro',h:'Cristo, cabeza de la iglesia'},{w:'TIMOTEO',c:'Libro',h:'Cartas a un joven pastor'},{w:'TITO',c:'Libro',h:'Instrucciones para pastores'},{w:'FILEMON',c:'Libro',h:'La carta más personal de Pablo'},{w:'HEBREOS',c:'Libro',h:'Jesús, el sumo sacerdote'},{w:'SANTIAGO',c:'Libro',h:'La fe sin obras está muerta'},{w:'PEDRO',c:'Libro',h:'Cartas sobre el sufrimiento'},{w:'JUDAS',c:'Libro',h:'La defensa de la fe'},{w:'APOCALIPSIS',c:'Libro',h:'Las visiones del fin de los tiempos'},
+  {w:'ADAN',c:'Personaje',h:'El primer hombre creado por Dios'},{w:'EVA',c:'Personaje',h:'La primera mujer, madre de todos'},{w:'CAIN',c:'Personaje',h:'El primer hijo de Adán'},{w:'ABEL',c:'Personaje',h:'El pastor que agradó a Dios'},{w:'SET',c:'Personaje',h:'El tercer hijo de Adán y Eva'},{w:'ENOC',c:'Personaje',h:'Caminó con Dios y fue llevado al cielo'},{w:'NOE',c:'Personaje',h:'Construyó el arca y salvó a su familia'},{w:'SEM',c:'Personaje',h:'Hijo de Noé, antepasado de Israel'},{w:'CAM',c:'Personaje',h:'Hijo de Noé'},{w:'JAFET',c:'Personaje',h:'Hijo de Noé'},{w:'ABRAHAM',c:'Personaje',h:'El padre de la fe, amigo de Dios'},{w:'SARA',c:'Personaje',h:'La esposa de Abraham'},{w:'LOT',c:'Personaje',h:'El sobrino de Abraham'},{w:'ISMAEL',c:'Personaje',h:'El hijo de Abraham y Agar'},{w:'ISAAC',c:'Personaje',h:'El hijo de la promesa de Abraham'},{w:'REBECA',c:'Personaje',h:'La esposa de Isaac'},{w:'JACOB',c:'Personaje',h:'Su nombre fue cambiado a Israel'},{w:'ESAU',c:'Personaje',h:'El hermano gemelo de Jacob'},{w:'LEA',c:'Personaje',h:'La primera esposa de Jacob'},{w:'RAQUEL',c:'Personaje',h:'La esposa amada de Jacob'},{w:'RUBEN',c:'Personaje',h:'El hijo mayor de Jacob'},{w:'SIMEON',c:'Personaje',h:'Hijo de Jacob y Lea'},{w:'LEVI',c:'Personaje',h:'Hijo de Jacob, padre de los sacerdotes'},{w:'JUDA',c:'Personaje',h:'De su tribu vino Jesús'},{w:'JOSE',c:'Personaje',h:'El soñador gobernador de Egipto'},{w:'BENJAMIN',c:'Personaje',h:'El hijo menor de Jacob'},{w:'MOISES',c:'Personaje',h:'El libertador de Israel, habló con Dios'},{w:'AARON',c:'Personaje',h:'El hermano de Moisés, primer sacerdote'},{w:'MIRIAM',c:'Personaje',h:'La hermana de Moisés y Aarón'},{w:'JOSUE',c:'Personaje',h:'Llevó a Israel a la tierra prometida'},{w:'CALEB',c:'Personaje',h:'El espía fiel de Israel'},{w:'RAHAB',c:'Personaje',h:'La mujer de Jericó que escondió espías'},{w:'DEBORA',c:'Personaje',h:'La única jueza de Israel'},{w:'BARAC',c:'Personaje',h:'El general que luchó con Débora'},{w:'GEDEON',c:'Personaje',h:'El juez que venció con 300 hombres'},{w:'JEFTA',c:'Personaje',h:'El juez que hizo un voto difícil'},{w:'SAMSON',c:'Personaje',h:'El hombre más fuerte de Israel'},{w:'DALILA',c:'Personaje',h:'Cortó el cabello de Sansón'},{w:'NOEMI',c:'Personaje',h:'La suegra de Rut'},{w:'BOOZ',c:'Personaje',h:'El familiar redentor de Rut'},{w:'OBED',c:'Personaje',h:'El hijo de Rut y Booz'},{w:'ELI',c:'Personaje',h:'El sacerdote que crió a Samuel'},{w:'SAMUEL',c:'Personaje',h:'El profeta que ungió a Saúl y David'},{w:'SAUL',c:'Personaje',h:'El primer rey de Israel'},{w:'JONATAN',c:'Personaje',h:'El mejor amigo de David'},{w:'DAVID',c:'Personaje',h:'El pastor que venció a Goliat y fue rey'},{w:'GOLIAT',c:'Personaje',h:'El gigante filisteo vencido por David'},{w:'BETSABE',c:'Personaje',h:'La madre del rey Salomón'},{w:'SALOMON',c:'Personaje',h:'El rey más sabio de Israel'},{w:'ELIAS',c:'Personaje',h:'El profeta de fuego que fue al cielo'},{w:'ELISEO',c:'Personaje',h:'El discípulo y sucesor de Elías'},{w:'NAAMAN',c:'Personaje',h:'El general sirio sanado de lepra'},{w:'ACAB',c:'Personaje',h:'El rey malo de Israel'},{w:'JEZABEL',c:'Personaje',h:'La reina malvada esposa de Acab'},{w:'JEHU',c:'Personaje',h:'El rey que acabó con la casa de Acab'},{w:'JOSAFAT',c:'Personaje',h:'El rey bueno de Judá'},{w:'JOSIAS',c:'Personaje',h:'El rey que encontró el libro de la ley'},{w:'EZEQUIAS',c:'Personaje',h:'El rey que oró y fue sanado'},{w:'JEREMIAS',c:'Personaje',h:'El profeta que lloró por su pueblo'},{w:'BARUC',c:'Personaje',h:'El secretario del profeta Jeremías'},{w:'EZEQUIEL',c:'Personaje',h:'El profeta de las visiones'},{w:'DANIEL',c:'Personaje',h:'El joven fiel en el foso de leones'},{w:'SADRAC',c:'Personaje',h:'Uno de los tres del horno de fuego'},{w:'MESAC',c:'Personaje',h:'Uno de los tres del horno de fuego'},{w:'ZOROBABEL',c:'Personaje',h:'El líder que reconstruyó el templo'},{w:'ESDRAS',c:'Personaje',h:'El sacerdote que enseñó la ley'},{w:'NEHEMIAS',c:'Personaje',h:'Reconstruyó el muro de Jerusalén'},{w:'ESTER',c:'Personaje',h:'La reina judía que salvó a su pueblo'},{w:'MARDOQUEO',c:'Personaje',h:'El primo de Ester'},{w:'AMAN',c:'Personaje',h:'El malvado que quiso destruir judíos'},{w:'JOB',c:'Personaje',h:'El hombre paciente que confió en Dios'},{w:'BALAAM',c:'Personaje',h:'El profeta cuya burra habló'},{w:'BALAC',c:'Personaje',h:'El rey moabita que contrató a Balaam'},{w:'OTONIEL',c:'Personaje',h:'El primer juez de Israel'},{w:'JOCABED',c:'Personaje',h:'La madre de Moisés'},{w:'JETRO',c:'Personaje',h:'El suegro de Moisés'},{w:'AMRAM',c:'Personaje',h:'El padre de Moisés y Aarón'},{w:'ABIGAIL',c:'Personaje',h:'La mujer sabia que salvó su casa'},{w:'NABAL',c:'Personaje',h:'El esposo necio de Abigaíl'},{w:'ABSALON',c:'Personaje',h:'El hijo rebelde de David'},{w:'JOAB',c:'Personaje',h:'El general del ejército de David'},{w:'NATAN',c:'Personaje',h:'El profeta que reprendió a David'},{w:'ELIMELEC',c:'Personaje',h:'El esposo de Noemí'},{w:'PENINA',c:'Personaje',h:'La rival de Ana, madre de Samuel'},{w:'ANA',c:'Personaje',h:'La madre de Samuel que oró con fervor'},{w:'GIEZI',c:'Personaje',h:'El siervo de Eliseo'},{w:'NEFTALI',c:'Personaje',h:'Hijo de Jacob y Bilha'},{w:'ZABULON',c:'Personaje',h:'Hijo de Jacob y Lea'},{w:'ISACAR',c:'Personaje',h:'Hijo de Jacob y Lea'},{w:'ASER',c:'Personaje',h:'Hijo de Jacob y Zilpá'},{w:'DAN',c:'Personaje',h:'Hijo de Jacob y Bilha'},{w:'MANASES',c:'Personaje',h:'Hijo mayor de José, nieto de Jacob'},{w:'EFRAIM',c:'Personaje',h:'Hijo menor de José, bendecido más'},{w:'TAMAR',c:'Personaje',h:'La nuera de Judá'},{w:'NIMROD',c:'Personaje',h:'El primer poderoso cazador'},{w:'ELCANA',c:'Personaje',h:'El padre de Samuel'},{w:'ABIMELEC',c:'Personaje',h:'El rey filisteo que habló con Abraham'},{w:'JAEL',c:'Personaje',h:'La mujer que derrotó al general Sísara'},{w:'SISARA',c:'Personaje',h:'El general cananeo derrotado por Débora'},{w:'MICOL',c:'Personaje',h:'La hija de Saúl, esposa de David'},{w:'SADOC',c:'Personaje',h:'El sacerdote fiel en tiempos de Salomón'},{w:'OMRI',c:'Personaje',h:'El rey de Israel que fundó Samaria'},{w:'ASA',c:'Personaje',h:'El rey bueno de Judá que destruyó ídolos'},{w:'JEROBOAM',c:'Personaje',h:'El primer rey del reino del Norte'},{w:'ROBOAM',c:'Personaje',h:'El hijo de Salomón que dividió el reino'},{w:'MATUSALEN',c:'Personaje',h:'El hombre que más años vivió en la Biblia'},{w:'LAMEC',c:'Personaje',h:'El padre de Noé'},
+  {w:'JESUS',c:'Personaje',h:'El Hijo de Dios, Salvador del mundo'},{w:'MARIA',c:'Personaje',h:'La madre de Jesús'},{w:'PABLO',c:'Personaje',h:'El apóstol de los gentiles'},{w:'ANDRES',c:'Personaje',h:'El hermano de Pedro, primer discípulo'},{w:'FELIPE',c:'Personaje',h:'El apóstol que trajo a Natanael'},{w:'BARTOLOME',c:'Personaje',h:'Apóstol también conocido como Natanael'},{w:'TOMAS',c:'Personaje',h:'El apóstol que dudó de la resurrección'},{w:'MATEO',c:'Personaje',h:'El cobrador que siguió a Jesús'},{w:'SIMON',c:'Personaje',h:'El apóstol llamado el Zelote'},{w:'JUDAS',c:'Personaje',h:'El apóstol que traicionó a Jesús'},{w:'BERNABE',c:'Personaje',h:'El compañero misionero de Pablo'},{w:'TIMOTEO',c:'Personaje',h:'El joven pastor discípulo de Pablo'},{w:'TITO',c:'Personaje',h:'El colaborador de Pablo en Creta'},{w:'SILAS',c:'Personaje',h:'El compañero de Pablo en su segundo viaje'},{w:'LUCAS',c:'Personaje',h:'El médico y escritor del evangelio'},{w:'MARCOS',c:'Personaje',h:'El escritor del evangelio más corto'},{w:'PRISCILA',c:'Personaje',h:'La misionera esposa de Aquila'},{w:'AQUILA',c:'Personaje',h:'El esposo de Priscila'},{w:'APOLO',c:'Personaje',h:'El predicador elocuente de Alejandría'},{w:'ESTEBAN',c:'Personaje',h:'El primer mártir cristiano'},{w:'ZAQUEO',c:'Personaje',h:'El cobrador que subió a un árbol para ver a Jesús'},{w:'LAZARO',c:'Personaje',h:'El amigo de Jesús resucitado de los muertos'},{w:'MARTA',c:'Personaje',h:'La hermana de Lázaro que servía'},{w:'NICODEMO',c:'Personaje',h:'El fariseo que visitó a Jesús de noche'},{w:'CORNELIO',c:'Personaje',h:'El primer gentil convertido'},{w:'ANANIAS',c:'Personaje',h:'El discípulo que oró por Pablo en Damasco'},{w:'DORCAS',c:'Personaje',h:'La discípula que hacía ropa para los pobres'},{w:'LIDIA',c:'Personaje',h:'La primera cristiana en Europa'},{w:'FEBE',c:'Personaje',h:'La diaconisa que llevó la carta de Pablo'},{w:'EPAFRAS',c:'Personaje',h:'El fundador de la iglesia en Colosas'},{w:'ONESIMO',c:'Personaje',h:'El esclavo convertido'},{w:'JAIRO',c:'Personaje',h:'Su hija fue resucitada por Jesús'},{w:'BARTIMEO',c:'Personaje',h:'El ciego sanado por Jesús'},{w:'PILATO',c:'Personaje',h:'El gobernador que sentenció a Jesús'},{w:'HERODES',c:'Personaje',h:'El rey que mató a los niños de Belén'},{w:'CAIFAS',c:'Personaje',h:'El sumo sacerdote que juzgó a Jesús'},{w:'SIMEON',c:'Personaje',h:'El anciano que sostuvo al niño Jesús'},{w:'ZACARIAS',c:'Personaje',h:'El padre de Juan el Bautista'},{w:'ELISABET',c:'Personaje',h:'La madre de Juan el Bautista'},{w:'MAGDALENA',c:'Personaje',h:'La primera en ver a Jesús resucitado'},{w:'CLEOFAS',c:'Personaje',h:'El discípulo del camino a Emaús'},{w:'NATANAEL',c:'Personaje',h:'El israelita sin engaño'},{w:'EUNICE',c:'Personaje',h:'La madre de Timoteo'},{w:'LOIDA',c:'Personaje',h:'La abuela de Timoteo'},{w:'MALCO',c:'Personaje',h:'El siervo a quien Pedro cortó la oreja'},{w:'GOMER',c:'Personaje',h:'La esposa del profeta Oseas'},{w:'ABISAI',c:'Personaje',h:'El sobrino de David y guerrero'},{w:'HULDA',c:'Personaje',h:'La profetisa de los tiempos de Josías'},{w:'AGAR',c:'Personaje',h:'La sierva egipcia de Sara'},{w:'ELIFAZ',c:'Personaje',h:'El primer amigo de Job'},{w:'BILDAD',c:'Personaje',h:'El segundo amigo de Job'},{w:'ZOFAR',c:'Personaje',h:'El tercero amigo de Job'},{w:'AMINADAB',c:'Personaje',h:'El antepasado de David'},{w:'SALMON',c:'Personaje',h:'El padre de Booz'},{w:'ISAI',c:'Personaje',h:'El padre de David'},{w:'BENAIAS',c:'Personaje',h:'El comandante del ejército de Salomón'},{w:'ADONIA',c:'Personaje',h:'El hijo de David que quiso ser rey'},{w:'HIRAM',c:'Personaje',h:'El rey de Tiro que ayudó a Salomón'},{w:'SEBA',c:'Personaje',h:'La reina que visitó a Salomón'},{w:'CORE',c:'Personaje',h:'El levita que se rebeló contra Moisés'},{w:'DATAN',c:'Personaje',h:'El que se rebeló con Coré'},{w:'ABIRAM',c:'Personaje',h:'El otro rebelde con Coré'},{w:'BEZALEL',c:'Personaje',h:'El artesano elegido para el tabernáculo'},{w:'ELEAZAR',c:'Personaje',h:'El hijo de Aarón, sumo sacerdote'},{w:'ITAMAR',c:'Personaje',h:'El menor de los hijos de Aarón'},{w:'FINEES',c:'Personaje',h:'El nieto de Aarón, celoso por Dios'},{w:'NADAB',c:'Personaje',h:'El hijo de Aarón que ofreció fuego extraño'},{w:'SEFORA',c:'Personaje',h:'La esposa de Moisés'},{w:'NAHOR',c:'Personaje',h:'El hermano de Abraham'},{w:'TERA',c:'Personaje',h:'El padre de Abraham'},{w:'MILCA',c:'Personaje',h:'La esposa de Nahor'},{w:'LABAN',c:'Personaje',h:'El suegro de Jacob'},{w:'ZILPA',c:'Personaje',h:'La sierva de Lea'},{w:'BILHA',c:'Personaje',h:'La sierva de Raquel'},{w:'DINA',c:'Personaje',h:'La única hija mencionada de Jacob'},{w:'POTIFAR',c:'Personaje',h:'El oficial egipcio que compró a José'},{w:'FARAON',c:'Personaje',h:'El rey de Egipto'},{w:'DARIO',c:'Personaje',h:'El rey medo que puso a Daniel sobre gobernadores'},{w:'CIRO',c:'Personaje',h:'El rey persa que liberó a Israel del exilio'},{w:'ARTAJERJES',c:'Personaje',h:'El rey que autorizó a Nehemías'},{w:'JERJES',c:'Personaje',h:'El rey persa esposo de Ester'},{w:'NABUCODONOSOR',c:'Personaje',h:'El rey babilónico que destruyó Jerusalén'},{w:'BELSASAR',c:'Personaje',h:'El rey que vio la escritura en la pared'},
+  {w:'EDEN',c:'Lugar',h:'El jardín donde vivieron Adán y Eva'},{w:'BETEL',c:'Lugar',h:'La casa de Dios, donde Jacob soñó'},{w:'ARARAT',c:'Lugar',h:'La montaña donde descansó el arca de Noé'},{w:'CANAAN',c:'Lugar',h:'La tierra prometida a Abraham'},{w:'EGIPTO',c:'Lugar',h:'El país donde esclavizaron a Israel'},{w:'SINAI',c:'Lugar',h:'El monte donde Dios dio la ley a Moisés'},{w:'JORDAN',c:'Lugar',h:'El río donde Jesús fue bautizado'},{w:'JERICO',c:'Lugar',h:'La ciudad cuyas murallas cayeron'},{w:'SION',c:'Lugar',h:'El monte sagrado de Jerusalén'},{w:'BELEN',c:'Lugar',h:'La ciudad donde nació Jesús'},{w:'NAZARET',c:'Lugar',h:'La ciudad donde creció Jesús'},{w:'GALILEA',c:'Lugar',h:'La región norte donde ministró Jesús'},{w:'JUDEA',c:'Lugar',h:'La región del sur de Israel'},{w:'SAMARIA',c:'Lugar',h:'La región entre Galilea y Judea'},{w:'CAFARNAUM',c:'Lugar',h:'La ciudad base de Jesús en Galilea'},{w:'GETSEMANI',c:'Lugar',h:'El jardín donde Jesús oró antes de su arresto'},{w:'BETANIA',c:'Lugar',h:'Donde vivían Lázaro, Marta y María'},{w:'DAMASCO',c:'Lugar',h:'La ciudad donde Pablo se convirtió'},{w:'ANTIOQUIA',c:'Lugar',h:'Donde los discípulos fueron llamados cristianos'},{w:'TARSO',c:'Lugar',h:'La ciudad natal del apóstol Pablo'},{w:'ATENAS',c:'Lugar',h:'Donde Pablo predicó en el areópago'},{w:'CORINTO',c:'Lugar',h:'La ciudad griega con una iglesia'},{w:'EFESO',c:'Lugar',h:'La ciudad de Asia Menor con una iglesia'},{w:'ROMA',c:'Lugar',h:'La capital del Imperio Romano'},{w:'PATMOS',c:'Lugar',h:'La isla donde Juan recibió el Apocalipsis'},{w:'BABILONIA',c:'Lugar',h:'El imperio que destruyó Jerusalén'},{w:'NINIVE',c:'Lugar',h:'La ciudad a la que fue enviado Jonás'},{w:'HEBRON',c:'Lugar',h:'La ciudad donde fue enterrado Abraham'},{w:'CARMEL',c:'Lugar',h:'El monte del desafío de Elías'},{w:'TABOR',c:'Lugar',h:'El monte de la transfiguración'},{w:'MORIA',c:'Lugar',h:'El monte donde Abraham ofreció a Isaac'},{w:'GILGAL',c:'Lugar',h:'El primer campamento de Israel en Canaán'},{w:'SILO',c:'Lugar',h:'Donde estaba el tabernáculo en tiempos de Samuel'},{w:'ENGADI',c:'Lugar',h:'El desierto donde David se escondió de Saúl'},{w:'TIRO',c:'Lugar',h:'La ciudad fenicia famosa por su comercio'},{w:'SIDON',c:'Lugar',h:'La ciudad fenicia al norte de Israel'},{w:'MESOPOTAMIA',c:'Lugar',h:'La tierra entre los ríos Tigris y Éufrates'},{w:'EDOM',c:'Lugar',h:'La tierra de los descendientes de Esaú'},{w:'MOAB',c:'Lugar',h:'La tierra donde vivió Rut'},{w:'FILISTEA',c:'Lugar',h:'La tierra de los filisteos'},{w:'GALACIA',c:'Lugar',h:'La región de Asia Menor evangelizada por Pablo'},{w:'MACEDONIA',c:'Lugar',h:'La región griega evangelizada por Pablo'},{w:'GOSEN',c:'Lugar',h:'La región de Egipto donde vivió Israel'},{w:'PENIEL',c:'Lugar',h:'Donde Jacob luchó con el ángel'},{w:'MEGIDO',c:'Lugar',h:'El valle de la batalla final'},{w:'JERUSALEM',c:'Lugar',h:'La ciudad santa de Dios'},{w:'PERSIA',c:'Lugar',h:'El imperio de Ciro y Darío'},{w:'ASIRIA',c:'Lugar',h:'El imperio que conquistó el norte de Israel'},{w:'HERMON',c:'Lugar',h:'El monte nevado del norte de Israel'},{w:'GOLGOTHA',c:'Lugar',h:'El lugar donde Jesús fue crucificado'},{w:'CRETA',c:'Lugar',h:'La isla griega donde Tito era pastor'},{w:'MALTA',c:'Lugar',h:'La isla donde naufragó Pablo'},{w:'SICHEM',c:'Lugar',h:'La ciudad donde Jacob compró tierra'},{w:'FILIPOS',c:'Lugar',h:'La primera iglesia de Europa'},{w:'TESALONICA',c:'Lugar',h:'La ciudad de Macedonia con una iglesia'},{w:'BETFAGE',c:'Lugar',h:'La aldea donde Jesús tomó el asno'},{w:'EMAUS',c:'Lugar',h:'El camino donde Jesús apareció resucitado'},{w:'BETESDA',c:'Lugar',h:'El estanque de los milagros en Jerusalén'},{w:'DECAPOLIS',c:'Lugar',h:'La región de las diez ciudades'},{w:'CESAREA',c:'Lugar',h:'La ciudad romana en la costa de Israel'},{w:'JOPE',c:'Lugar',h:'El puerto donde Jonás tomó un barco'},{w:'TROAS',c:'Lugar',h:'Donde Pablo tuvo la visión del macedonio'},{w:'CHIPRE',c:'Lugar',h:'La isla natal de Bernabé'},{w:'LISTRA',c:'Lugar',h:'Donde Timoteo conoció a Pablo'},{w:'BEREA',c:'Lugar',h:'Sus habitantes examinaban las Escrituras'},{w:'LAODICIA',c:'Lugar',h:'La iglesia tibia del Apocalipsis'},{w:'PERGAMO',c:'Lugar',h:'La iglesia donde estaba el trono de Satanás'},{w:'ESMIRNA',c:'Lugar',h:'La iglesia que sería perseguida'},{w:'FILADELFIA',c:'Lugar',h:'La iglesia de la puerta abierta'},{w:'SARDIS',c:'Lugar',h:'La iglesia que tenía nombre pero estaba muerta'},{w:'TARSIS',c:'Lugar',h:'El destino de la huida de Jonás'},{w:'TIBERIADES',c:'Lugar',h:'El mar de Galilea donde Jesús caminó'},
+  {w:'ANGEL',c:'Término',h:'Mensajero de Dios'},{w:'ARCANGEL',c:'Término',h:'El ángel de más alto rango'},{w:'QUERUBIN',c:'Término',h:'El ángel guardián del trono de Dios'},{w:'SERAFIN',c:'Término',h:'El ángel que rodea el trono de Dios'},{w:'PROFETA',c:'Término',h:'El portavoz de Dios al pueblo'},{w:'SACERDOTE',c:'Término',h:'El mediador entre Dios y el hombre'},{w:'LEVITA',c:'Término',h:'El servidor del templo de la tribu de Leví'},{w:'NAZAREO',c:'Término',h:'El que se consagraba especialmente a Dios'},{w:'APOSTOL',c:'Término',h:'El enviado con autoridad especial'},{w:'DISCIPULO',c:'Término',h:'El seguidor y aprendiz de Jesús'},{w:'EVANGELIO',c:'Término',h:'Las buenas noticias de salvación'},{w:'PARABOLA',c:'Término',h:'Una historia con enseñanza espiritual'},{w:'MILAGRO',c:'Término',h:'Una obra sobrenatural de Dios'},{w:'BAUTISMO',c:'Término',h:'El símbolo de la nueva vida en Cristo'},{w:'RESURRECCION',c:'Término',h:'Volver a la vida después de la muerte'},{w:'TEMPLO',c:'Término',h:'La casa de Dios en Jerusalén'},{w:'TABERNACULO',c:'Término',h:'El santuario portátil de Israel'},{w:'ARCA',c:'Término',h:'El cofre sagrado con las tablas de la ley'},{w:'MANA',c:'Término',h:'El pan del cielo que alimentó a Israel'},{w:'CORDERO',c:'Término',h:'El símbolo de Jesús como sacrificio'},{w:'PALOMA',c:'Término',h:'El símbolo del Espíritu Santo'},{w:'ALTAR',c:'Término',h:'El lugar de ofrendas y sacrificios'},{w:'SACRIFICIO',c:'Término',h:'La ofrenda ofrecida a Dios'},{w:'DIEZMO',c:'Término',h:'La décima parte ofrecida a Dios'},{w:'AYUNO',c:'Término',h:'Abstenerse de comer para orar a Dios'},{w:'ORACION',c:'Término',h:'La conversación con Dios'},{w:'ALABANZA',c:'Término',h:'Cantar y glorificar a Dios'},{w:'ADORACION',c:'Término',h:'Rendir honor y devoción a Dios'},{w:'GRACIA',c:'Término',h:'El favor inmerecido de Dios'},{w:'MISERICORDIA',c:'Término',h:'La compasión y amor de Dios'},{w:'AMOR',c:'Término',h:'El mayor atributo de Dios'},{w:'ESPERANZA',c:'Término',h:'La confianza en las promesas de Dios'},{w:'PAZ',c:'Término',h:'La tranquilidad que Dios da'},{w:'GLORIA',c:'Término',h:'El esplendor y majestad de Dios'},{w:'SANTIDAD',c:'Término',h:'La perfección y pureza de Dios'},{w:'JUSTICIA',c:'Término',h:'El atributo de Dios que juzga con equidad'},{w:'VERDAD',c:'Término',h:'Lo que Dios es y proclama'},{w:'CIELO',c:'Término',h:'La morada de Dios'},{w:'REINO',c:'Término',h:'El gobierno de Dios'},{w:'TRONO',c:'Término',h:'El asiento del poder de Dios'},{w:'CORONA',c:'Término',h:'El símbolo de la victoria del creyente'},{w:'ESPADA',c:'Término',h:'La Palabra de Dios en la armadura espiritual'},{w:'ESCUDO',c:'Término',h:'La fe en la armadura del creyente'},{w:'ARMADURA',c:'Término',h:'El equipo espiritual del cristiano'},{w:'PROMESA',c:'Término',h:'La palabra que Dios siempre cumple'},{w:'PACTO',c:'Término',h:'El acuerdo sagrado entre Dios y su pueblo'},{w:'LEY',c:'Término',h:'Los mandatos de Dios para su pueblo'},{w:'MANDAMIENTO',c:'Término',h:'Los diez preceptos dados a Moisés'},{w:'PECADO',c:'Término',h:'La desobediencia a Dios'},{w:'PERDON',c:'Término',h:'El regalo de Dios al arrepentido'},{w:'SALVACION',c:'Término',h:'El rescate de Dios para la humanidad'},{w:'REDENCION',c:'Término',h:'El rescate del pecado por la sangre de Cristo'},{w:'IGLESIA',c:'Término',h:'La comunidad de creyentes en Cristo'},{w:'SINAGOGA',c:'Término',h:'El lugar de reunión judía para adorar'},{w:'FARISEO',c:'Término',h:'El líder religioso que seguía la ley estrictamente'},{w:'SADUCEO',c:'Término',h:'El grupo que negaba la resurrección'},{w:'ESCRIBA',c:'Término',h:'El copista y maestro de la ley'},{w:'GENTIL',c:'Término',h:'El que no es judío'},{w:'HEBREO',c:'Término',h:'El nombre del pueblo de Abraham'},{w:'ISRAELITA',c:'Término',h:'El descendiente de Jacob (Israel)'},{w:'UNGIDO',c:'Término',h:'El escogido y separado para Dios'},{w:'MESIAS',c:'Término',h:'El prometido Salvador de Israel'},{w:'CRISTO',c:'Término',h:'El ungido, título griego del Mesías'},{w:'BENDICION',c:'Término',h:'El favor divino sobre una persona'},{w:'PLAGA',c:'Término',h:'El castigo divino sobre el pecado'},{w:'CREACION',c:'Término',h:'Todo lo que Dios hizo en seis días'},{w:'DILUVIO',c:'Término',h:'La gran inundación en tiempos de Noé'},{w:'PENTECOSTES',c:'Término',h:'El día en que el Espíritu Santo descendió'},{w:'SABADO',c:'Término',h:'El día de descanso ordenado por Dios'},{w:'JUBILEO',c:'Término',h:'El año de libertad cada 50 años'},{w:'EXPIACION',c:'Término',h:'El acto de cubrir el pecado con sangre'},{w:'SERMON',c:'Término',h:'El discurso de enseñanza de Jesús'},{w:'TENTACION',c:'Término',h:'La prueba de Jesús en el desierto'},{w:'TRANSFIGURACION',c:'Término',h:'Cuando Jesús mostró su gloria divina'},{w:'COMUNION',c:'Término',h:'La cena del Señor con pan y vino'},{w:'INTERCESION',c:'Término',h:'Orar a favor de otros'},{w:'MEDIADOR',c:'Término',h:'El que intercede entre dos partes'},{w:'ENCARNACION',c:'Término',h:'Dios haciéndose hombre en Jesús'},{w:'ASCENSION',c:'Término',h:'La subida de Jesús al cielo'},{w:'MARAVILLA',c:'Término',h:'Una señal sobrenatural de Dios'},{w:'PROFECIA',c:'Término',h:'El mensaje divino sobre el futuro'},{w:'VISION',c:'Término',h:'Una revelación de Dios en forma de imagen'},{w:'ESPIRITU',c:'Término',h:'La tercera persona de la Trinidad'},{w:'TRINIDAD',c:'Término',h:'Padre, Hijo y Espíritu Santo'},{w:'PASCUA',c:'Término',h:'La fiesta del éxodo de Egipto'},{w:'CENTURION',c:'Término',h:'El oficial romano cuyo siervo Jesús sanó'},{w:'RABBI',c:'Término',h:'Maestro en hebreo'},{w:'SANTIFICACION',c:'Término',h:'El proceso de crecer en santidad'},{w:'JUSTIFICACION',c:'Término',h:'Ser declarado justo por Dios'},{w:'GLORIFICACION',c:'Término',h:'La transformación final del creyente'},{w:'RECONCILIACION',c:'Término',h:'La restauración de la paz con Dios'},{w:'BIENAVENTURANZA',c:'Término',h:'Las promesas de felicidad de Jesús'},{w:'UNCION',c:'Término',h:'Derramar aceite como señal de consagración'},{w:'CARISMA',c:'Término',h:'El don espiritual dado por Dios'},{w:'LENGUAS',c:'Término',h:'El don de hablar en idiomas desconocidos'},{w:'SANIDAD',c:'Término',h:'El milagro de curar enfermedades'},{w:'MARANATA',c:'Término',h:'Ven, Señor Jesús en arameo'},{w:'ALELUYA',c:'Término',h:'Alabanza a Dios en hebreo'},{w:'AMEN',c:'Término',h:'Así sea, expresión de acuerdo'},{w:'HOSANNA',c:'Término',h:'Sálvanos ahora, grito de la multitud'},{w:'SELAH',c:'Término',h:'Pausa musical en los Salmos'},{w:'SHALOM',c:'Término',h:'Paz en hebreo'},{w:'ABBA',c:'Término',h:'Papá en arameo, como llamó Jesús a Dios'},{w:'GEHENNA',c:'Término',h:'El valle del fuego, símbolo del infierno'},{w:'SEOL',c:'Término',h:'El lugar de los muertos en el AT'},{w:'PARAISO',c:'Término',h:'El lugar de los justos muertos'},
+  {w:'SERPIENTE',c:'Animal',h:'El animal que engañó a Eva en el Edén'},{w:'PALOMA',c:'Animal',h:'Trajo la hoja de olivo a Noé'},{w:'LEON',c:'Animal',h:'El animal del foso de Daniel'},{w:'AGUILA',c:'Animal',h:'El símbolo del poder de Dios'},{w:'ASNO',c:'Animal',h:'El animal que habló con Balaam'},{w:'CAMELLO',c:'Animal',h:'El animal de los comerciantes de José'},{w:'TORO',c:'Animal',h:'El animal del sacrificio en el templo'},{w:'OVEJA',c:'Animal',h:'El animal del buen pastor'},{w:'LANGOSTA',c:'Animal',h:'La plaga de Egipto'},{w:'CUERVO',c:'Animal',h:'El pájaro que alimentó a Elías'},{w:'CABRA',c:'Animal',h:'El símbolo de las naciones en el juicio'},{w:'BUEY',c:'Animal',h:'El animal de labranza bíblico'},{w:'PECES',c:'Animal',h:'Los multiplicados por Jesús'},
+  {w:'ARPA',c:'Objeto',h:'El instrumento musical de David'},{w:'HONDA',c:'Objeto',h:'El arma de David contra Goliat'},{w:'COPA',c:'Objeto',h:'El recipiente de la cena del Señor'},{w:'CANDELABRO',c:'Objeto',h:'El menorah del tabernáculo'},{w:'INCIENSO',c:'Objeto',h:'El perfume del templo'},{w:'MANTO',c:'Objeto',h:'La prenda de Elías que heredó Eliseo'},{w:'CETRO',c:'Objeto',h:'El símbolo del poder real'},{w:'SELLO',c:'Objeto',h:'La marca de propiedad o autoridad'},{w:'PERGAMINO',c:'Objeto',h:'El material de escritura bíblico'},{w:'TIENDA',c:'Objeto',h:'La vivienda de los patriarcas'},{w:'PALMAS',c:'Objeto',h:'Las ramas agitadas en la entrada de Jesús'},{w:'OLIVO',c:'Objeto',h:'El árbol símbolo de Israel'},{w:'HIGUERA',c:'Objeto',h:'El árbol que Jesús maldijo'},{w:'CEDRO',c:'Objeto',h:'La madera del templo de Salomón'},{w:'MIRRA',c:'Objeto',h:'El regalo de los magos al niño Jesús'},{w:'ORO',c:'Objeto',h:'El regalo más preciado de los magos'},
+  {w:'CREADOR',c:'Atributo',h:'El título de Dios como hacedor de todo'},{w:'OMNIPOTENTE',c:'Atributo',h:'El que todo lo puede'},{w:'OMNISCIENTE',c:'Atributo',h:'El que todo lo sabe'},{w:'OMNIPRESENTE',c:'Atributo',h:'El que está en todo lugar'},{w:'ETERNO',c:'Atributo',h:'El que no tiene principio ni fin'},{w:'SOBERANO',c:'Atributo',h:'El que tiene todo el poder y control'},{w:'TODOPODEROSO',c:'Atributo',h:'Otro nombre de Dios en el AT'},{w:'REDENTOR',c:'Atributo',h:'El que nos rescata del pecado'},{w:'CONSOLADOR',c:'Atributo',h:'El título del Espíritu Santo'},{w:'SALVADOR',c:'Atributo',h:'El título de Jesús como rescatador'},{w:'EMANUEL',c:'Atributo',h:'Dios con nosotros'},{w:'PASTOR',c:'Atributo',h:'El Señor es mi pastor'},{w:'LUZ',c:'Atributo',h:'Yo soy la luz del mundo'},{w:'CAMINO',c:'Atributo',h:'Yo soy el camino, la verdad y la vida'},{w:'VIDA',c:'Atributo',h:'En Él estaba la vida'},{w:'PAN',c:'Atributo',h:'Yo soy el pan de vida'},{w:'VID',c:'Atributo',h:'Yo soy la vid verdadera'},{w:'PUERTA',c:'Atributo',h:'Yo soy la puerta de las ovejas'},{w:'PRINCIPE',c:'Atributo',h:'El príncipe de paz'},{w:'ANCIANO',c:'Atributo',h:'El anciano de días'},
+];
+
+// ── HELPERS ────────────────────────────────────────────────
+const CAT_ICONS={Libro:'📖',Personaje:'👤',Lugar:'📍','Término':'✝️',Animal:'🐑',Objeto:'🏺',Atributo:'✨'};
+const MAX_ERRORS=10;
+let state={word:'',category:'',hint:'',guessed:new Set(),errors:0,timer:null,seconds:0,running:false,wins:0};
+function normalize(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase()}
+function getUsed(){try{return JSON.parse(localStorage.getItem('b_used')||'[]')}catch{return[]}}
+function saveUsed(w){let u=getUsed();u.push(w);if(u.length>=WORDS.length)u=[w];try{localStorage.setItem('b_used',JSON.stringify(u))}catch{}}
+function pick(){const u=getUsed(),av=WORDS.filter(i=>!u.includes(normalize(i.w)));return(av.length?av:WORDS)[Math.floor(Math.random()*(av.length||WORDS.length))]}
+
+// ── CANVAS ─────────────────────────────────────────────────
+const cv=document.getElementById('hangman-canvas'),cx=cv.getContext('2d');
+function clearCv(){cx.clearRect(0,0,cv.width,cv.height);const g=cx.createLinearGradient(0,0,0,cv.height);g.addColorStop(0,'#fdf4ff');g.addColorStop(1,'#fce7f3');cx.fillStyle=g;cx.fillRect(0,0,cv.width,cv.height)}
+function drawHangman(n){
+  clearCv();
+  const P='#7c3aed',K='#ec4899',A='#f59e0b',S='#fde68a',D='#4c1d95';
+  const steps=[
+    ()=>{cx.strokeStyle=P;cx.lineWidth=4;cx.lineCap='round';cx.shadowColor='rgba(124,58,237,.3)';cx.shadowBlur=6;cx.beginPath();cx.moveTo(15,178);cx.lineTo(150,178);cx.stroke();cx.shadowBlur=0},
+    ()=>{cx.strokeStyle=P;cx.lineWidth=4;cx.lineCap='round';cx.beginPath();cx.moveTo(45,178);cx.lineTo(45,18);cx.stroke()},
+    ()=>{cx.strokeStyle=P;cx.lineWidth=4;cx.lineCap='round';cx.beginPath();cx.moveTo(45,18);cx.lineTo(115,18);cx.stroke();cx.fillStyle=A;cx.beginPath();cx.arc(115,18,5,0,Math.PI*2);cx.fill()},
+    ()=>{cx.strokeStyle=A;cx.lineWidth=3;cx.lineCap='round';cx.setLineDash([4,2]);cx.beginPath();cx.moveTo(115,18);cx.lineTo(115,48);cx.stroke();cx.setLineDash([])},
+    ()=>{
+      cx.shadowColor='rgba(236,72,153,.3)';cx.shadowBlur=8;
+      cx.beginPath();cx.arc(115,62,16,0,Math.PI*2);cx.fillStyle=S;cx.fill();
+      cx.strokeStyle=K;cx.lineWidth=2.5;cx.stroke();cx.shadowBlur=0;
+      cx.strokeStyle=D;cx.lineWidth=2;
+      cx.beginPath();cx.moveTo(108,57);cx.lineTo(112,61);cx.moveTo(112,57);cx.lineTo(108,61);cx.stroke();
+      cx.beginPath();cx.moveTo(118,57);cx.lineTo(122,61);cx.moveTo(122,57);cx.lineTo(118,61);cx.stroke();
+      cx.beginPath();cx.arc(115,70,5,.3,Math.PI-.3,true);cx.stroke();
+      cx.fillStyle='#93c5fd';cx.beginPath();cx.arc(109,65,2.5,0,Math.PI*2);cx.fill();
+    },
+    ()=>{cx.strokeStyle=P;cx.lineWidth=3.5;cx.lineCap='round';cx.beginPath();cx.moveTo(115,78);cx.lineTo(115,128);cx.stroke();cx.fillStyle=K;cx.beginPath();cx.arc(115,100,4,0,Math.PI*2);cx.fill()},
+    ()=>{cx.strokeStyle=K;cx.lineWidth=3;cx.lineCap='round';cx.beginPath();cx.moveTo(115,88);cx.lineTo(90,110);cx.stroke();cx.fillStyle=S;cx.beginPath();cx.arc(90,110,5,0,Math.PI*2);cx.fill();cx.strokeStyle=K;cx.lineWidth=1.5;cx.stroke()},
+    ()=>{cx.strokeStyle=K;cx.lineWidth=3;cx.lineCap='round';cx.beginPath();cx.moveTo(115,88);cx.lineTo(140,110);cx.stroke();cx.fillStyle=S;cx.beginPath();cx.arc(140,110,5,0,Math.PI*2);cx.fill();cx.strokeStyle=K;cx.lineWidth=1.5;cx.stroke()},
+    ()=>{cx.strokeStyle=A;cx.lineWidth=3;cx.lineCap='round';cx.beginPath();cx.moveTo(115,128);cx.lineTo(90,158);cx.stroke();cx.beginPath();cx.moveTo(90,158);cx.lineTo(78,158);cx.stroke()},
+    ()=>{cx.strokeStyle=A;cx.lineWidth=3;cx.lineCap='round';cx.beginPath();cx.moveTo(115,128);cx.lineTo(140,158);cx.stroke();cx.beginPath();cx.moveTo(140,158);cx.lineTo(152,158);cx.stroke()},
+  ];
+  for(let i=0;i<n&&i<steps.length;i++)steps[i]();
+}
+
+// ── TECLADO ────────────────────────────────────────────────
+const ROWS=[['A','B','C','D','E','F','G','H','I','J','K'],['L','M','N','Ñ','O','P','Q','R','S','T'],['U','V','W','X','Y','Z']];
+function buildKbd(){
+  ROWS.forEach((row,i)=>{
+    const el=document.getElementById(`row${i+1}`);el.innerHTML='';
+    row.forEach(lt=>{
+      const b=document.createElement('button');b.className='key-btn';b.textContent=lt;b.dataset.letter=lt;
+      b.addEventListener('click',()=>{
+        const r=document.createElement('div');
+        r.style.cssText='position:absolute;border-radius:50%;background:rgba(124,58,237,.3);width:40px;height:40px;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);animation:ripple .4s ease-out forwards;pointer-events:none';
+        b.appendChild(r);setTimeout(()=>r.remove(),400);
+        handleGuess(lt);
+      });
+      el.appendChild(b);
+    });
+  });
+}
+function disableKey(l,ok){document.querySelectorAll('.key-btn').forEach(b=>{if(normalize(b.dataset.letter)===normalize(l)){b.disabled=true;b.classList.add(ok?'correct':'wrong')}})}
+function resetKbd(){document.querySelectorAll('.key-btn').forEach(b=>{b.disabled=false;b.classList.remove('correct','wrong')})}
+
+// ── PALABRA ────────────────────────────────────────────────
+function renderWord(){
+  const c=document.getElementById('word-display');c.innerHTML='';
+  for(const ch of normalize(state.word)){
+    const b=document.createElement('div');b.className='letter-box';
+    if(state.guessed.has(ch)){b.textContent=ch;b.classList.add('revealed')}
+    c.appendChild(b);
+  }
+}
+function isDone(){return[...normalize(state.word)].every(c=>state.guessed.has(c))}
+
+// ── CORAZONES ──────────────────────────────────────────────
+function renderHearts(){
+  const r=document.getElementById('attempts-row');r.innerHTML='';
+  for(let i=0;i<MAX_ERRORS;i++){
+    const h=document.createElement('span');h.className='heart'+(i>=(MAX_ERRORS-state.errors)?' lost':'');
+    h.textContent=i>=(MAX_ERRORS-state.errors)?'🖤':'❤️';r.appendChild(h);
+  }
+}
+
+// ── TIMER ──────────────────────────────────────────────────
+function startTimer(){state.seconds=0;clearInterval(state.timer);state.timer=setInterval(()=>{state.seconds++;const m=String(Math.floor(state.seconds/60)).padStart(2,'0'),s=String(state.seconds%60).padStart(2,'0');document.getElementById('timer-display').textContent=`${m}:${s}`},1000)}
+function stopTimer(){clearInterval(state.timer)}
+
+// ── FEEDBACK ───────────────────────────────────────────────
+const OK=['🌟 ¡Excelente! ¡Esa letra está!','⭐ ¡Muy bien! ¡Eres increíble!','🎉 ¡Genial! ¡Sigue así!','✨ ¡Correcto! ¡Qué inteligente!','🙌 ¡Fantástico! ¡Dios te dio sabiduría!','💪 ¡Súper! ¡Sigue adelante!','🎊 ¡Bien hecho! ¡Ya casi terminas!'];
+const NO=['😅 No está esa letra. ¡Sigue intentando!','🤔 No está. ¡Tú puedes!','💭 No es esa. ¡Piensa bien!','🔍 ¡Intenta otra letra!','💪 ¡Ups! No está. ¡No te rindas!'];
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+function showFeedback(msg,type){const b=document.getElementById('feedback-box');b.className='feedback-anim '+(type==='correct'?'correct-fb':type==='wrong'?'wrong-fb':'');b.textContent=msg;void b.offsetWidth;b.classList.add('feedback-anim')}
+
+function spawnStars(){
+  const w=document.getElementById('game-wrapper');
+  ['⭐','🌟','✨','💫'].forEach((e,i)=>{
+    const el=document.createElement('div');el.className='star-burst';el.textContent=e;
+    el.style.cssText=`left:${15+Math.random()*70}%;top:${25+Math.random()*50}%;animation-delay:${i*.1}s`;
+    w.appendChild(el);setTimeout(()=>el.remove(),1000);
+  });
+}
+function spawnConfetti(){
+  const w=document.getElementById('game-wrapper');
+  const cols=['#f59e0b','#10b981','#3b82f6','#ef4444','#8b5cf6','#f1c40f','#ec4899'];
+  for(let i=0;i<80;i++){
+    const p=document.createElement('div');p.className='confetti-piece';
+    const sz=5+Math.random()*8,dur=2+Math.random()*1.5;
+    p.style.cssText=`width:${sz}px;height:${sz}px;background:${cols[i%cols.length]};left:${Math.random()*100}%;top:0;--dur:${dur}s;animation-delay:${Math.random()*.8}s;transform:rotate(${Math.random()*360}deg)`;
+    w.appendChild(p);setTimeout(()=>p.remove(),(dur+1)*1000);
+  }
+}
+
+// ── LÓGICA ─────────────────────────────────────────────────
+function handleGuess(letter){
+  if(!state.running)return;
+  const n=normalize(letter);
+  if(state.guessed.has(n)){showFeedback('🔄 Ya usaste esa letra. ¡Prueba otra!','');return}
+  state.guessed.add(n);
+  if(normalize(state.word).includes(n)){
+    disableKey(n,true);renderWord();spawnStars();playCorrect();showFeedback(rnd(OK),'correct');
+    if(isDone())setTimeout(winGame,500);
+  }else{
+    state.errors++;disableKey(n,false);renderHearts();drawHangman(state.errors);
+    const c=document.createElement('span');c.className='wrong-chip';c.textContent=n;document.getElementById('wrong-chips').appendChild(c);
+    document.querySelector('.canvas-card').classList.add('shake');
+    setTimeout(()=>document.querySelector('.canvas-card').classList.remove('shake'),500);
+    playWrong();showFeedback(rnd(NO),'wrong');
+    if(state.errors>=MAX_ERRORS)setTimeout(loseGame,500);
+  }
+}
+function winGame(){
+  stopTimer();state.running=false;state.wins++;saveUsed(normalize(state.word));
+  document.getElementById('score-count').textContent=state.wins;
+  const m=String(Math.floor(state.seconds/60)).padStart(2,'0'),s=String(state.seconds%60).padStart(2,'0');
+  document.getElementById('win-word-display').textContent=state.word;
+  document.getElementById('win-stats').textContent=`⏱️ Tiempo: ${m}:${s}  •  ❤️ Errores: ${state.errors}`;
+  document.getElementById('win-emoji').textContent=['🎉','🏆','🌟','🎊','✨'][Math.floor(Math.random()*5)];
+  document.getElementById('win-screen').classList.add('active');
+  spawnConfetti();playWin();
+}
+function loseGame(){
+  stopTimer();state.running=false;
+  document.getElementById('lose-word-display').textContent=state.word;
+  const m=String(Math.floor(state.seconds/60)).padStart(2,'0'),s=String(state.seconds%60).padStart(2,'0');
+  document.getElementById('lose-stats').textContent=`⏱️ Tiempo: ${m}:${s}  •  Categoría: ${state.category}`;
+  document.getElementById('lose-screen').classList.add('active');playLose();
+}
+function startGame(){
+  const item=pick();state.word=item.w.toUpperCase();state.category=item.c;state.hint=item.h;
+  state.guessed=new Set();state.errors=0;state.running=true;
+  const badge=document.getElementById('category-badge');
+  badge.textContent=`${CAT_ICONS[item.c]||'📖'} ${item.c}`;
+  badge.className=`cat-badge cat-${item.c}`;
+  document.getElementById('hint-box').textContent=`💡 ${item.h}`;
+  document.getElementById('wrong-chips').innerHTML='';
+  ['win-screen','lose-screen','start-screen'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  resetKbd();renderWord();renderHearts();drawHangman(0);startTimer();
+  showFeedback('⌨️ ¡Adivina las letras! Pulsa o escribe desde tu teclado','');
+}
+
+// ── EVENTOS ────────────────────────────────────────────────
+document.getElementById('start-btn').addEventListener('click',startGame);
+document.getElementById('play-again-win').addEventListener('click',startGame);
+document.getElementById('play-again-lose').addEventListener('click',startGame);
+document.addEventListener('keydown',e=>{
+  if(!state.running)return;
+  const k=e.key.toUpperCase();
+  if(/^[A-ZÁÉÍÓÚÑ]$/.test(k))handleGuess(normalize(k));
+});
+
+buildKbd();clearCv();
+</script>
+</body>
+</html>

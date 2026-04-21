@@ -9,4 +9,11 @@
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="es" href="https://wilsonyesidriveracasas.github.io/Bible_game/biblia-ninos.html"/>
   </url>
+  <url>
+    <loc>https://wilsonyesid.github.io/juegos/ahorcado_biblico.html</loc>
+    <lastmod>2026-04-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="es" href="https://wilsonyesid.github.io/juegos/ahorcado_biblico.html"/>
+  </url>
 </urlset>
