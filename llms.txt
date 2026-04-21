@@ -17,19 +17,6 @@ de confeti al acertar, efectos visuales al fallar, barra de progreso con hitos y
 registro de récord local. Un solo jugador.
 URL: https://wilsonyesidriveracasas.github.io/Bible_game/biblia-ninos.html
 
-### Jalar la Cuerda: Biblia (tug-of-war-biblia.html)
-Juego multijugador de jalar la cuerda para dos equipos. Cada equipo responde preguntas
-de conocimiento bíblico (Antiguo y Nuevo Testamento) usando el teclado. El equipo que
-acumule más respuestas correctas "jala" al personaje contrario hacia su lado.
-Incluye selector de duración (1, 2 o 5 minutos) y 225+ preguntas RVR1960.
-URL: https://wilsonyesidriveracasas.github.io/Bible_game/tug-of-war-biblia.html
-
-### Jalar la Cuerda: Matemáticas (tug-of-war-math.html)
-Versión matemática del juego de jalar la cuerda para dos equipos. Cada equipo resuelve
-operaciones de suma y multiplicación usando un teclado numérico. Útil para clases de
-matemáticas en escuelas primarias.
-URL: https://wilsonyesidriveracasas.github.io/Bible_game/tug-of-war-math.html
-
 ## Idioma
 Todos los juegos están en español (es-CO).
 
