@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aventuras Bíblicas 🌟</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Nunito',sans-serif;
+    background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+    position:relative;
+  }
+
+  /* ── SCREENS ── */
+  .screen{display:none;width:100%;max-width:680px;padding:20px;}
+  .screen.active{display:flex;flex-direction:column;align-items:center;}
+
+  /* ── WELCOME ── */
+  #welcomeScreen{text-align:center;}
+  .big-title{font-size:2.8rem;font-weight:900;color:#fff;text-shadow:0 4px 12px rgba(0,0,0,.3);line-height:1.1;}
+  .sub-title{font-size:1.2rem;color:#e0d7ff;margin:8px 0 28px;}
+  .mascot{font-size:5rem;animation:float 3s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
+
+  .name-card{background:#fff;border-radius:24px;padding:28px 36px;box-shadow:0 12px 40px rgba(0,0,0,.2);width:100%;max-width:380px;}
+  .name-card label{font-size:1.1rem;font-weight:700;color:#5a3fa0;display:block;margin-bottom:10px;}
+  .name-card input{width:100%;padding:14px 18px;border:3px solid #b39ddb;border-radius:16px;font-size:1.2rem;font-family:'Nunito',sans-serif;outline:none;transition:.2s;}
+  .name-card input:focus{border-color:#7c4dff;}
+  .btn-start{
+    margin-top:20px;width:100%;padding:16px;background:linear-gradient(135deg,#ff6b6b,#ff4e50);
+    border:none;border-radius:20px;font-size:1.4rem;font-weight:900;color:#fff;cursor:pointer;
+    box-shadow:0 6px 20px rgba(255,78,80,.4);transition:.2s;letter-spacing:.5px;
+  }
+  .btn-start:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(255,78,80,.5);}
+  .btn-start:active{transform:translateY(0);}
+
+  /* ── GAME SCREEN ── */
+  #gameScreen{gap:0;}
+  .hud{
+    display:flex;justify-content:space-between;align-items:center;
+    width:100%;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);
+    border-radius:20px;padding:12px 20px;margin-bottom:14px;color:#fff;
+  }
+  .hud-score{font-size:1.6rem;font-weight:900;}
+  .hud-label{font-size:.75rem;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.5px;}
+  .lives-display{font-size:1.8rem;letter-spacing:4px;}
+  .hud-time{font-size:1.6rem;font-weight:900;font-variant-numeric:tabular-nums;}
+
+  /* progress bar */
+  .progress-wrap{width:100%;margin-bottom:14px;}
+  .progress-bar-bg{
+    width:100%;height:22px;background:rgba(255,255,255,.25);border-radius:99px;overflow:hidden;
+    box-shadow:inset 0 2px 6px rgba(0,0,0,.15);
+  }
+  .progress-bar-fill{
+    height:100%;background:linear-gradient(90deg,#f9ca24,#f0932b,#e84393);
+    border-radius:99px;transition:width .6s cubic-bezier(.34,1.56,.64,1);
+    position:relative;
+  }
+  .progress-bar-fill::after{
+    content:'';position:absolute;top:4px;left:8px;right:8px;height:6px;
+    background:rgba(255,255,255,.35);border-radius:99px;
+  }
+  .progress-stars{display:flex;justify-content:space-between;padding:4px 2px 0;font-size:.9rem;}
+
+  /* ── BONUS PANEL ── */
+  .bonus-panel{
+    width:100%;background:rgba(0,0,0,.25);backdrop-filter:blur(6px);
+    border-radius:18px;padding:10px 14px 12px;margin-bottom:12px;
+  }
+  .bonus-title{
+    text-align:center;color:#fff;font-size:.75rem;font-weight:800;
+    text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;opacity:.9;
+  }
+  /* countdown bar */
+  .bonus-bar-wrap{
+    width:100%;height:18px;background:rgba(255,255,255,.15);border-radius:99px;
+    overflow:hidden;margin-bottom:8px;
+    box-shadow:inset 0 2px 5px rgba(0,0,0,.2);
+  }
+  .bonus-bar-fill{
+    height:100%;border-radius:99px;width:100%;
+    background:linear-gradient(90deg,#ffd600,#ffab00);
+  }
+  /* CSS animation: drains from 100% → 0% in 8s, paused by default */
+  @keyframes bonusDrain{from{width:100%;}to{width:0%;}}
+  .bonus-bar-fill.running{
+    animation: bonusDrain 8s linear forwards;
+  }
+  /* color phases via separate overlay — pure CSS timed with delays */
+  @keyframes bonusColorPhase{
+    0%     {background:linear-gradient(90deg,#ffd600,#ffab00);}
+    37.5%  {background:linear-gradient(90deg,#ffd600,#ffab00);}  /* 0-3s: gold  */
+    37.6%  {background:linear-gradient(90deg,#ff8c00,#e65100);}  /* 3-5s: orange */
+    62.5%  {background:linear-gradient(90deg,#ff8c00,#e65100);}
+    62.6%  {background:linear-gradient(90deg,#43a047,#1b5e20);}  /* 5-8s: green */
+    100%   {background:linear-gradient(90deg,#43a047,#1b5e20);}
+  }
+  .bonus-bar-fill.running{
+    animation: bonusDrain 8s linear forwards, bonusColorPhase 8s linear forwards;
+  }
+  /* tiers row */
+  .bonus-tiers{display:flex;gap:6px;}
+  .bonus-tier{
+    flex:1;border-radius:12px;padding:6px 4px;text-align:center;
+    border:2px solid transparent;transition:all .25s;
+    cursor:default;
+  }
+  .bonus-tier .tier-pts{font-size:1.3rem;font-weight:900;line-height:1;}
+  .bonus-tier .tier-lbl{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.85;margin-top:2px;}
+  /* tier colors inactive */
+  .bonus-tier.t3{background:rgba(255,214,0,.15);color:#ffd600;}
+  .bonus-tier.t2{background:rgba(255,140,0,.15);color:#ff8c00;}
+  .bonus-tier.t1{background:rgba(100,200,100,.15);color:#81c784;}
+  /* tier active glow */
+  .bonus-tier.active.t3{
+    background:linear-gradient(135deg,#ffd600,#ff8f00);color:#4e342e;
+    border-color:#fff;box-shadow:0 0 16px rgba(255,214,0,.7);
+    transform:scale(1.08);
+  }
+  .bonus-tier.active.t2{
+    background:linear-gradient(135deg,#ff8c00,#e65100);color:#fff;
+    border-color:#ffe082;box-shadow:0 0 14px rgba(255,140,0,.6);
+    transform:scale(1.05);
+  }
+  .bonus-tier.active.t1{
+    background:linear-gradient(135deg,#43a047,#1b5e20);color:#fff;
+    border-color:#a5d6a7;box-shadow:0 0 12px rgba(76,175,80,.5);
+    transform:scale(1.03);
+  }
+  /* floating +N popup */
+  .pts-pop{
+    position:fixed;font-size:2.4rem;font-weight:900;
+    pointer-events:none;z-index:400;
+    animation:ptsFloat 1s cubic-bezier(.22,.61,.36,1) forwards;
+    text-shadow:0 3px 10px rgba(0,0,0,.4);white-space:nowrap;
+  }
+  @keyframes ptsFloat{
+    0%{opacity:1;transform:translateY(0) scale(1);}
+    30%{opacity:1;transform:translateY(-30px) scale(1.15);}
+    100%{opacity:0;transform:translateY(-110px) scale(.8);}
+  }
+
+  /* question card */
+  .q-card{
+    width:100%;background:#fff;border-radius:24px;padding:28px 28px 22px;
+    box-shadow:0 12px 40px rgba(0,0,0,.2);margin-bottom:14px;
+    animation:popIn .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes popIn{from{opacity:0;transform:scale(.88);}to{opacity:1;transform:scale(1);}}
+  .q-number{font-size:.8rem;font-weight:700;color:#b39ddb;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+  .q-text{font-size:1.25rem;font-weight:700;color:#2d1b6e;line-height:1.45;}
+
+  /* options */
+  .options-grid{display:flex;flex-direction:column;gap:10px;width:100%;}
+  .opt-btn{
+    width:100%;padding:16px 22px;
+    background:linear-gradient(135deg,#f8f9ff,#eef2ff);
+    border:3px solid #c5cae9;border-radius:18px;
+    font-size:1.1rem;font-weight:700;color:#3d2b8f;
+    cursor:pointer;text-align:left;transition:.18s;
+    display:flex;align-items:center;gap:12px;
+  }
+  .opt-btn:hover:not(:disabled){
+    background:linear-gradient(135deg,#ede7f6,#d1c4e9);
+    border-color:#7c4dff;transform:translateX(4px);
+  }
+  .opt-btn .opt-key{
+    min-width:36px;height:36px;border-radius:10px;background:#7c4dff;
+    color:#fff;font-size:.9rem;font-weight:900;display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .opt-btn.correct{background:linear-gradient(135deg,#e8f5e9,#c8e6c9)!important;border-color:#4caf50!important;color:#1b5e20!important;}
+  .opt-btn.wrong{background:linear-gradient(135deg,#ffebee,#ffcdd2)!important;border-color:#f44336!important;color:#b71c1c!important;}
+  .opt-btn:disabled{cursor:default;}
+
+  /* feedback overlay */
+  #feedback{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    display:none;align-items:center;justify-content:center;
+    pointer-events:none;z-index:200;
+  }
+  .feedback-bubble{
+    font-size:5rem;animation:burstIn .55s cubic-bezier(.34,1.56,.64,1) forwards;
+    filter:drop-shadow(0 4px 16px rgba(0,0,0,.3));
+  }
+  @keyframes burstIn{
+    0%{opacity:0;transform:scale(.2) rotate(-15deg);}
+    60%{opacity:1;transform:scale(1.3) rotate(8deg);}
+    100%{opacity:1;transform:scale(1) rotate(0);}
+  }
+
+  /* ── GAME OVER ── */
+  #gameoverScreen{text-align:center;}
+  .over-card{
+    background:#fff;border-radius:28px;padding:36px 36px;
+    box-shadow:0 16px 50px rgba(0,0,0,.25);width:100%;max-width:420px;
+  }
+  .over-emoji{font-size:4.5rem;margin-bottom:8px;}
+  .over-title{font-size:2rem;font-weight:900;color:#2d1b6e;margin-bottom:4px;}
+  .over-subtitle{font-size:1rem;color:#7c4dff;margin-bottom:22px;}
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;}
+  .stat-box{background:linear-gradient(135deg,#ede7f6,#d1c4e9);border-radius:18px;padding:14px 10px;}
+  .stat-val{font-size:2rem;font-weight:900;color:#4a148c;}
+  .stat-lbl{font-size:.78rem;font-weight:700;color:#7e57c2;text-transform:uppercase;letter-spacing:.5px;}
+  .record-badge{
+    background:linear-gradient(135deg,#ffd54f,#ffca28);border-radius:16px;padding:12px 18px;
+    font-size:1rem;font-weight:800;color:#4e342e;margin-bottom:20px;
+    display:none;align-items:center;justify-content:center;gap:8px;
+  }
+  .record-badge.visible{display:flex;}
+  .btn-retry{
+    width:100%;padding:16px;background:linear-gradient(135deg,#7c4dff,#512da8);
+    border:none;border-radius:20px;font-size:1.3rem;font-weight:900;color:#fff;
+    cursor:pointer;box-shadow:0 6px 20px rgba(124,77,255,.4);transition:.2s;
+  }
+  .btn-retry:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(124,77,255,.5);}
+
+  /* ── CONFETTI ── */
+  .confetti-piece{
+    position:fixed;width:10px;height:14px;top:-20px;
+    animation:confettiFall linear forwards;z-index:300;
+    border-radius:2px;pointer-events:none;
+  }
+  @keyframes confettiFall{
+    0%{transform:translateY(0) rotate(0deg);opacity:1;}
+    85%{opacity:1;}
+    100%{transform:translateY(110vh) rotate(720deg);opacity:0;}
+  }
+
+  /* milestone pop */
+  .milestone-pop{
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    font-size:1.6rem;font-weight:900;color:#fff;
+    text-shadow:0 3px 12px rgba(0,0,0,.4);
+    z-index:250;pointer-events:none;
+    animation:milestoneFade 1.5s ease-out forwards;
+    text-align:center;
+  }
+  @keyframes milestoneFade{
+    0%{opacity:0;transform:translate(-50%,-70%);}
+    20%{opacity:1;transform:translate(-50%,-50%);}
+    70%{opacity:1;transform:translate(-50%,-50%);}
+    100%{opacity:0;transform:translate(-50%,-30%);}
+  }
+
+  /* score pop */
+  @keyframes scorePop{
+    0%{transform:scale(1);}
+    40%{transform:scale(1.45);}
+    70%{transform:scale(.95);}
+    100%{transform:scale(1);}
+  }
+  .score-pop{animation:scorePop .4s cubic-bezier(.34,1.56,.64,1);}
+
+  /* ── ERROR OVERLAY ── */
+  #errorOverlay{
+    position:fixed;inset:0;z-index:500;
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    pointer-events:none;
+  }
+  /* red flash bg */
+  #errorOverlay::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(ellipse at center, rgba(220,30,30,.55) 0%, rgba(150,0,0,.75) 100%);
+    animation:redFlash .9s ease-out forwards;
+  }
+  @keyframes redFlash{
+    0%{opacity:0;}
+    15%{opacity:1;}
+    60%{opacity:.85;}
+    100%{opacity:0;}
+  }
+  .error-face{
+    font-size:7rem;position:relative;z-index:1;
+    animation:faceDrop .85s cubic-bezier(.34,1.56,.64,1) forwards;
+    filter:drop-shadow(0 6px 20px rgba(0,0,0,.5));
+  }
+  @keyframes faceDrop{
+    0%  {opacity:0;transform:translateY(-60px) scale(.4) rotate(-15deg);}
+    40% {opacity:1;transform:translateY(10px)  scale(1.25) rotate(5deg);}
+    65% {transform:translateY(-6px) scale(.95) rotate(-3deg);}
+    85% {transform:translateY(4px)  scale(1.05) rotate(1deg);}
+    100%{opacity:1;transform:translateY(0)    scale(1)    rotate(0);}
+  }
+  .error-text{
+    font-size:2.4rem;font-weight:900;color:#fff;
+    text-shadow:0 4px 16px rgba(0,0,0,.6);letter-spacing:1px;
+    position:relative;z-index:1;margin-top:10px;
+    animation:errorTextIn .5s .15s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes errorTextIn{
+    from{opacity:0;transform:scale(.5);}
+    to{opacity:1;transform:scale(1);}
+  }
+  /* last-life warning banner */
+  #lastLifeWarn{
+    display:none;
+    position:fixed;bottom:30px;left:50%;transform:translateX(-50%);
+    background:linear-gradient(135deg,#ff1744,#b71c1c);
+    color:#fff;font-size:1.1rem;font-weight:900;
+    padding:14px 28px;border-radius:99px;z-index:600;
+    box-shadow:0 6px 24px rgba(255,23,68,.6);letter-spacing:.5px;
+    animation:warnPulse 2.2s ease-in-out infinite;
+    white-space:nowrap;
+  }
+  @keyframes warnPulse{
+    0%,100%{transform:translateX(-50%) scale(1);    box-shadow:0 6px 24px rgba(255,23,68,.6);}
+    50%    {transform:translateX(-50%) scale(1.06); box-shadow:0 8px 32px rgba(255,23,68,.9);}
+  }
+  /* card shake – stays on the card only */
+  @keyframes sadShake{
+    0%,100%{transform:translateX(0);}
+    15%{transform:translateX(-14px) rotate(-1.5deg);}
+    35%{transform:translateX(14px)  rotate(1.5deg);}
+    55%{transform:translateX(-9px)  rotate(-1deg);}
+    75%{transform:translateX(9px)   rotate(1deg);}
+    90%{transform:translateX(-4px);}
+  }
+  .shake{animation:sadShake .6s ease-out;}
+  /* screen-level flash (body border flash) */
+  @keyframes bodyFlash{
+    0%  {outline:0px solid transparent;}
+    10% {outline:10px solid rgba(220,30,30,.9);}
+    50% {outline:6px  solid rgba(220,30,30,.5);}
+    100%{outline:0px  solid transparent;}
+  }
+  .body-flash{animation:bodyFlash .7s ease-out;}
+</style>
+</head>
+<body>
+
+<!-- ══ WELCOME ══ -->
+<div id="welcomeScreen" class="screen active">
+  <div class="mascot">📖</div>
+  <div class="big-title">Aventuras<br>Bíblicas</div>
+  <div class="sub-title">¡Cuánto sabes del Antiguo Testamento?</div>
+
+  <button class="btn-start" onclick="startGame()">¡A JUGAR! 🚀</button>
+</div>
+
+<!-- ══ GAME ══ -->
+<div id="gameScreen" class="screen">
+  <div class="hud">
+    <div>
+      <div class="hud-label">Puntos</div>
+      <div class="hud-score" id="scoreDisplay">0</div>
+    </div>
+    <div style="text-align:center">
+      <div class="hud-label">Vidas</div>
+      <div class="lives-display" id="livesDisplay">❤️❤️</div>
+    </div>
+    <div style="text-align:right">
+      <div class="hud-label">Tiempo</div>
+      <div class="hud-time" id="timeDisplay">00:00</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="progress-stars" id="progressStars"></div>
+  </div>
+
+  <!-- bonus panel -->
+  <div class="bonus-panel">
+    <div class="bonus-title">⚡ ¡Responde rápido y gana bonus! <span id="bonusSecs" style="font-size:1rem;background:rgba(255,255,255,.2);border-radius:8px;padding:1px 8px;margin-left:4px;">8s</span></div>
+    <div class="bonus-bar-wrap"><div class="bonus-bar-fill" id="bonusBar"></div></div>
+    <div class="bonus-tiers">
+      <div class="bonus-tier t3 active" id="tier3">
+        <div class="tier-pts">⚡+3</div>
+        <div class="tier-lbl">Menos de 3s</div>
+      </div>
+      <div class="bonus-tier t2" id="tier2">
+        <div class="tier-pts">🔥+2</div>
+        <div class="tier-lbl">Menos de 5s</div>
+      </div>
+      <div class="bonus-tier t1" id="tier1">
+        <div class="tier-pts">💡+1</div>
+        <div class="tier-lbl">Menos de 8s</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="q-card" id="qCard">
+    <div class="q-number" id="qNumber">Pregunta 1</div>
+    <div class="q-text" id="qText">Cargando...</div>
+  </div>
+
+  <div class="options-grid" id="optionsGrid"></div>
+</div>
+
+<!-- ══ GAME OVER ══ -->
+<div id="gameoverScreen" class="screen">
+  <div class="over-card">
+    <div class="over-emoji" id="overEmoji">🌟</div>
+    <div class="over-title" id="overTitle">¡Increíble!</div>
+    <div class="over-subtitle" id="overSubtitle">¡Lo hiciste muy bien!</div>
+
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-val" id="finalScore">0</div>
+        <div class="stat-lbl">Puntos</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="finalCorrect">0</div>
+        <div class="stat-lbl">Correctas</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="finalTime">00:00</div>
+        <div class="stat-lbl">Tiempo</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="finalRecord">0</div>
+        <div class="stat-lbl">Récord</div>
+      </div>
+    </div>
+
+    <div class="record-badge" id="recordBadge">🏆 ¡NUEVO RÉCORD!</div>
+
+    <button class="btn-retry" onclick="restartGame()">🔄 ¡Jugar de nuevo!</button>
+  </div>
+</div>
+
+<!-- feedback overlay (correcto) -->
+<div id="feedback">
+  <div class="feedback-bubble" id="feedbackEmoji">✨</div>
+</div>
+
+<!-- error overlay (incorrecto) -->
+<div id="errorOverlay">
+  <div class="error-face" id="errorFace">😢</div>
+  <div class="error-text" id="errorText">¡Incorrecto!</div>
+</div>
+
+<!-- last life warning -->
+<div id="lastLifeWarn">⚠️ ¡Cuidado! Solo te queda <strong>1 vida</strong></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  QUESTIONS  [question, correct, wrong1, wrong2]
+// ═══════════════════════════════════════════
+const Q = [
+// ── GÉNESIS: CREACIÓN ──
+["¿Cuántos días tardó Dios en crear el mundo?","6 días","7 días","3 días"],
+["¿Qué creó Dios el primer día?","La luz","Los peces","Las plantas"],
+["¿Qué creó Dios el segundo día?","El cielo","El sol","Los animales"],
+["¿Qué creó Dios el tercer día?","La tierra y las plantas","Los pájaros","La luna"],
+["¿Qué creó Dios el cuarto día?","El sol, la luna y las estrellas","Los peces","El hombre"],
+["¿Qué creó Dios el quinto día?","Los peces y las aves","Los animales terrestres","Las plantas"],
+["¿Qué creó Dios el sexto día?","Los animales y al hombre","Las estrellas","El mar"],
+["¿Qué hizo Dios el séptimo día?","Descansó","Creó el mar","Creó más animales"],
+["¿De qué hizo Dios al hombre?","Del polvo de la tierra","Del agua","Del fuego"],
+["¿Cómo se llamaba el primer hombre?","Adán","Abel","Noé"],
+["¿De qué parte del cuerpo de Adán hizo Dios a la mujer?","De una costilla","Del brazo","Del pie"],
+["¿Cómo se llamaba la primera mujer?","Eva","Sara","Rebeca"],
+["¿En qué jardín vivían Adán y Eva?","Jardín del Edén","Jardín del Paraíso","Jardín de Canaán"],
+["¿Qué animal habló con Eva en el jardín?","La serpiente","El águila","El león"],
+["¿Qué fruta comió Eva en el jardín?","Del árbol del bien y del mal","Una manzana dorada","Un racimo de uvas"],
+["¿Qué pasó cuando Adán y Eva comieron el fruto prohibido?","Dios los sacó del jardín","Se volvieron invisibles","Se transformaron en animales"],
+["¿Quiénes fueron los hijos de Adán y Eva?","Caín y Abel","Sem y Cam","Esaú y Jacob"],
+["¿A qué se dedicaba Caín?","A cultivar la tierra","A pastorear ovejas","A pescar"],
+["¿A qué se dedicaba Abel?","A pastorear ovejas","A cultivar la tierra","A cazar"],
+["¿Por qué Caín mató a su hermano Abel?","Porque Dios aceptó la ofrenda de Abel","Porque Abel era más fuerte","Porque Abel le robó su comida"],
+// ── GÉNESIS: NOÉ ──
+["¿Cómo se llamaba el hombre que construyó el arca?","Noé","Adán","Abrahán"],
+["¿Por qué construyó Noé el arca?","Porque Dios enviaría un diluvio","Porque quería viajar","Porque Dios se lo ordenó para guardar oro"],
+["¿De qué era el arca de Noé?","De madera","De piedra","De metal"],
+["¿Cuántos días duró la lluvia del diluvio?","40 días y 40 noches","7 días","100 días"],
+["¿Cuántos hijos tenía Noé?","Tres","Dos","Cuatro"],
+["¿Cómo se llamaban los hijos de Noé?","Sem, Cam y Jafet","Caín, Abel y Set","Isaac, Ismael y Esaú"],
+["¿Qué pájaro envió Noé primero para ver si había tierra seca?","Un cuervo","Una paloma","Un águila"],
+["¿Qué trajo la paloma al volver al arca?","Una rama de olivo","Una flor","Un pez"],
+["¿Qué puso Dios en el cielo como señal de su promesa a Noé?","Un arcoíris","Una estrella","Una nube blanca"],
+["¿Qué prometió Dios a Noé después del diluvio?","No destruir la tierra con agua otra vez","Darle mucho oro","Hacerlo rey"],
+// ── GÉNESIS: TORRE DE BABEL ──
+["¿Por qué construyeron la Torre de Babel?","Para llegar al cielo","Para esconderse de Dios","Para guardar comida"],
+["¿Qué hizo Dios para que la gente dejara de construir la Torre de Babel?","Confundió su idioma","La destruyó con fuego","Envió viento fuerte"],
+["¿Dónde se construyó la Torre de Babel?","En la tierra de Sinar","En Egipto","En Canaán"],
+// ── GÉNESIS: ABRAHÁN ──
+["¿Cómo se llamaba el padre de la fe en la Biblia?","Abrahán","Moisés","David"],
+["¿De qué ciudad salió Abrahán cuando Dios le llamó?","Ur de los caldeos","Egipto","Babilonia"],
+["¿Cómo se llamaba la esposa de Abrahán?","Sara","Rebeca","Raquel"],
+["¿Qué le prometió Dios a Abrahán?","Una tierra y una gran familia","Mucho oro y plata","Ser el rey de todos"],
+["¿Cómo se llamaba el sobrino de Abrahán que viajó con él?","Lot","Ismael","Isaac"],
+["¿Adónde fue Lot cuando se separó de Abrahán?","Hacia Sodoma","Hacia Egipto","Hacia el monte"],
+["¿Qué pasó con la esposa de Lot cuando miraron hacia Sodoma?","Se convirtió en estatua de sal","Murió de miedo","Se perdió en el desierto"],
+["¿Cómo se llamó el hijo que Dios le dio a Abrahán y Sara en su vejez?","Isaac","Ismael","Jacob"],
+["¿Cuántos años tenía Sara cuando nació Isaac?","90 años","40 años","60 años"],
+["¿Qué pidió Dios a Abrahán que hiciera con Isaac?","Que lo ofreciera en sacrificio","Que lo mandara lejos","Que lo bautizara"],
+["¿Qué usó Dios para detener a Abrahán antes de sacrificar a Isaac?","Un ángel","Un trueno","Una nube"],
+["¿Qué encontró Abrahán para sacrificar en lugar de Isaac?","Un carnero en un arbusto","Un cordero en el río","Un toro en el campo"],
+["¿Cómo se llamó el hijo que tuvo Abrahán con Agar, la sirvienta?","Ismael","Esaú","Lot"],
+// ── GÉNESIS: ISAAC Y REBECA ──
+["¿Cómo se llamaba la esposa de Isaac?","Rebeca","Lía","Raquel"],
+["¿Cuántos hijos gemelos tuvo Isaac?","Dos","Tres","Cuatro"],
+["¿Cómo se llamaban los hijos gemelos de Isaac?","Esaú y Jacob","Sem y Cam","Caín y Abel"],
+["¿Quién nació primero: Esaú o Jacob?","Esaú","Jacob","Fueron al mismo tiempo"],
+["¿Qué tenía Esaú diferente a Jacob cuando nació?","Era todo peludo y rojo","Era más pequeño","Tenía el cabello blanco"],
+["¿Qué vendió Esaú a Jacob por un plato de lentejas?","Su derecho de primogenitura","Su manto","Su cayado"],
+["¿Qué puso Jacob en sus manos y cuello para engañar a su padre ciego Isaac?","Pieles de cabrito","Barro","Lana de oveja"],
+// ── GÉNESIS: JACOB ──
+["¿Cuántas esposas tuvo Jacob?","Cuatro","Dos","Una"],
+["¿Cómo se llamaban las esposas de Jacob?","Lía y Raquel","Sara y Agar","Rebeca y Dalila"],
+["¿Cuántos hijos tuvo Jacob en total?","Doce","Siete","Diez"],
+["¿Con quién luchó Jacob toda la noche junto al río?","Con un ángel de Dios","Con Esaú","Con el faraón"],
+["¿Qué nombre nuevo recibió Jacob después de luchar?","Israel","Judá","Sión"],
+["¿Por qué Jacob quería tanto a su hijo José?","Porque era el hijo de su vejez y le hizo una túnica de colores","Porque era el más valiente","Porque era el más inteligente"],
+// ── GÉNESIS: JOSÉ ──
+["¿Cuántos hermanos tenía José?","Once","Siete","Cuatro"],
+["¿Qué regalo especial le dio Jacob a José?","Una túnica de muchos colores","Un caballo blanco","Una espada de plata"],
+["¿Qué hicieron los hermanos de José con él?","Lo vendieron como esclavo","Lo encerraron en una cueva","Lo mandaron al desierto"],
+["¿A qué país fue vendido José?","Egipto","Babilonia","Siria"],
+["¿Cuánto dinero pagaron los mercaderes por José?","Veinte piezas de plata","Cien monedas de oro","Cincuenta monedas"],
+["¿A quién sirvió José en Egipto?","A Potifar, capitán del faraón","Al propio faraón","Al sumo sacerdote"],
+["¿Por qué José fue a la cárcel en Egipto?","Porque la esposa de Potifar lo acusó falsamente","Porque robó comida","Porque escapó"],
+["¿Qué podía hacer José que era muy especial?","Interpretar sueños","Hablar con los animales","Sanar enfermedades"],
+["¿Qué soñó el faraón que sólo José pudo explicar?","Siete vacas gordas y siete flacas","Siete estrellas y la luna","Un árbol grande y uno pequeño"],
+["¿Qué significaban las siete vacas gordas en el sueño del faraón?","Siete años de abundancia","Siete años de guerra","Siete años de lluvia"],
+["¿Qué cargo le dio el faraón a José?","Gobernador de Egipto","Capitán del ejército","Sacerdote principal"],
+["¿Por qué los hermanos de José viajaron a Egipto?","A comprar comida por el hambre","A buscar a José","A hacer negocios"],
+["¿Cuántas veces viajaron los hermanos de José a Egipto?","Dos veces","Una vez","Tres veces"],
+["¿Cuándo se reveló José a sus hermanos?","Cuando vio a su hermano Benjamín","Cuando el faraón lo mandó","Cuando los capturaron"],
+["¿Qué dijo José a sus hermanos cuando se reveló?","Yo soy José, no se aflijan","Los haré presos a todos","Vengaré lo que me hicieron"],
+["¿Qué edad tenía José cuando murió?","110 años","90 años","75 años"],
+// ── ÉXODO: MOISÉS ──
+["¿En qué país nació Moisés?","Egipto","Canaán","Midián"],
+["¿Por qué los israelitas eran esclavos en Egipto?","Porque el faraón tenía miedo de que fueran muchos","Porque perdieron una guerra","Porque debían dinero"],
+["¿Qué ordenó el faraón que se hiciera con los bebés varones hebreos?","Ahogarlos en el río Nilo","Venderlos como esclavos","Mandarlos al desierto"],
+["¿Cómo escondió la mamá de Moisés al bebé?","En una canasta en el río","Bajo la tierra","En una cueva"],
+["¿Quién encontró al bebé Moisés en el río?","La hija del faraón","Una sirvienta","Una pescadora"],
+["¿Cómo se llamaba la hermana de Moisés que vigiló la canasta?","María","Débora","Ester"],
+["¿Qué hizo Moisés cuando vio que un egipcio golpeaba a un hebreo?","Mató al egipcio","Llamó a los guardias","Huyó corriendo"],
+["¿Adónde huyó Moisés después de matar al egipcio?","A la tierra de Midián","A Canaán","A Babilonia"],
+["¿Qué vio Moisés en el monte Horeb que le llamó la atención?","Una zarza ardiendo que no se consumía","Un ángel brillante","Un río de fuego"],
+["¿Quién habló a Moisés desde la zarza ardiendo?","Dios","Un ángel","El espíritu de su padre"],
+["¿Qué misión le dio Dios a Moisés desde la zarza?","Sacar a los israelitas de Egipto","Construir un templo","Escribir las leyes"],
+["¿Quién fue con Moisés a hablar con el faraón?","Aarón, su hermano","Josué, su ayudante","Caleb, su amigo"],
+["¿Cuántas plagas envió Dios sobre Egipto?","Diez","Siete","Doce"],
+["¿Cuál fue la primera plaga que Dios envió a Egipto?","El río Nilo se volvió sangre","Langostas que comieron todo","Oscuridad total"],
+["¿Cuál fue la plaga de los animales pequeños que saltaban?","Las ranas","Los piojos","Las moscas"],
+["¿Cuál fue la última y más terrible plaga de Egipto?","Muerte de todos los primogénitos","Oscuridad de tres días","Granizo con fuego"],
+["¿Qué debían poner los israelitas en sus puertas para que Dios pasara de largo?","Sangre de un cordero","Aceite de oliva","Agua bendita"],
+["¿Cómo se llama la fiesta que celebra cuando Dios salvó a los israelitas de la última plaga?","La Pascua","El Pentecostés","El Yom Kipur"],
+["¿Qué dividió Moisés con su vara para que los israelitas cruzaran?","El Mar Rojo","El río Jordán","El río Nilo"],
+["¿Qué pasó con el ejército del faraón cuando entró al mar?","El agua los cubrió y murieron","Dios los encegueció","Los israelitas los vencieron"],
+["¿Qué comida envió Dios desde el cielo en el desierto?","Maná","Pan de trigo","Miel y leche"],
+["¿Qué era el maná?","Una comida blanca como escarcha","Carne de aves del cielo","Fruta del desierto"],
+["¿Qué le envió Dios al pueblo cuando pedían carne?","Codornices","Palomas","Peces"],
+["¿En qué monte recibió Moisés los Diez Mandamientos?","El Monte Sinaí","El Monte Nebo","El Monte Hermón"],
+["¿En qué estaban escritos los Diez Mandamientos?","En tablas de piedra","En papiro","En madera"],
+["¿Cuántas veces recibió Moisés las tablas de piedra?","Dos veces","Una vez","Tres veces"],
+["¿Por qué Moisés rompió las primeras tablas?","Porque el pueblo adoró un becerro de oro","Porque se cayó","Porque Dios se lo ordenó"],
+["¿Qué hizo el pueblo mientras Moisés estaba en el monte recibiendo los mandamientos?","Hizo un becerro de oro para adorarlo","Descansó y durmió","Construyó casas"],
+["¿Cuál fue el primer mandamiento que Dios le dio a Moisés?","No tendrás otros dioses delante de mí","Honra a tu padre y a tu madre","No robarás"],
+["¿Cuántos años caminó el pueblo de Israel por el desierto?","40 años","20 años","10 años"],
+["¿Por qué el pueblo caminó tantos años en el desierto?","Porque se quejaron y no confiaron en Dios","Porque se perdieron","Porque esperaron a Moisés"],
+["¿Cuántos espías envió Moisés a explorar la tierra de Canaán?","Doce","Siete","Dos"],
+["¿Qué fruta gigante encontraron los espías en Canaán?","Un racimo de uvas tan grande que lo cargaron dos hombres","Granadas enormes","Higos gigantes"],
+["¿Qué dijo Josué sobre la tierra que exploraron?","Que podían conquistarla con la ayuda de Dios","Que era imposible entrar","Que los gigantes eran invencibles"],
+["¿Pudo Moisés entrar a la tierra prometida?","No, murió antes de entrar","Sí, fue el primero en entrar","Entró pero luego regresó"],
+["¿Por qué Moisés no entró a la tierra prometida?","Porque golpeó la roca en lugar de hablarle","Porque era muy viejo","Porque Dios castigó a todo el pueblo"],
+["¿Desde qué monte vio Moisés la tierra prometida antes de morir?","El Monte Nebo","El Monte Sinaí","El Monte Carmelo"],
+["¿Cuántos años tenía Moisés cuando murió?","120 años","100 años","80 años"],
+// ── JOSUÉ ──
+["¿Quién reemplazó a Moisés como líder del pueblo de Israel?","Josué","Caleb","Samuel"],
+["¿Cuál fue la primera ciudad que el pueblo de Israel tomó en Canaán?","Jericó","Hai","Hebrón"],
+["¿Cómo cayeron las murallas de Jericó?","El pueblo marchó alrededor por 7 días y sonó la trompeta","Las derribaron con arietes","Dios envió un terremoto"],
+["¿Cuántos días marchó el pueblo alrededor de Jericó?","Siete días","Tres días","Diez días"],
+["¿Qué hicieron los sacerdotes cuando marchaban alrededor de Jericó?","Tocaban trompetas","Cantaban canciones","Llevaban el becerro de oro"],
+["¿Qué color de cuerda puso Rahab en su ventana para ser salvada?","Rojo","Azul","Blanco"],
+["¿Qué trabajo tenía Rahab que ayudó a los espías israelitas en Jericó?","Era mesonera","Era costurera","Era comerciante"],
+["¿Qué hizo Dios con el río Jordán para que el pueblo cruzara?","Detuvo las aguas para que cruzaran a pie","Lo secó completamente","Puso una roca para cruzar"],
+["¿Quién llevaba el Arca del Pacto cuando cruzaron el Jordán?","Los sacerdotes levitas","Josué","Los soldados más fuertes"],
+// ── JUECES ──
+["¿Cómo se llamaba la única mujer jueza del pueblo de Israel?","Débora","Ester","Rut"],
+["¿Cómo se llamaba el juez que venció a los madianitas con solo 300 hombres?","Gedeón","Sansón","Jefté"],
+["¿Cómo redujo Dios el ejército de Gedeón de 32.000 a 300?","Los que bebían agua echando la mano a la boca","Los que sabían luchar mejor","Los que llegaron más rápido"],
+["¿Qué usó Gedeón para confundir al ejército enemigo?","Cántaros con antorchas y trompetas","Espadas y lanzas","Carros de guerra"],
+["¿Cómo se llamaba el juez más famoso por su fuerza extraordinaria?","Sansón","Gedeón","Barac"],
+["¿De dónde venía la fuerza de Sansón?","De su cabello largo","De sus músculos grandes","De una espada especial"],
+["¿Cómo se llamaba la mujer que traicionó a Sansón?","Dalila","Jezabel","Rahab"],
+["¿Qué hizo Dalila para quitar la fuerza a Sansón?","Le cortó el cabello mientras dormía","Le dio una bebida especial","Le robó su ropa"],
+["¿Qué le hicieron los filisteos a Sansón cuando lo capturaron?","Le sacaron los ojos","Lo encerraron con leones","Lo quemaron"],
+["¿Cómo murió Sansón al final?","Derribó las columnas de un edificio y murió con los filisteos","Lo mataron con espadas","Cayó desde un edificio"],
+["¿Cuántos hombres mató Sansón con la quijada de un asno?","Mil filisteos","Cien filisteos","Trescientos filisteos"],
+// ── RUT ──
+["¿De dónde era Rut, la mujer del libro de Rut?","De Moab","De Egipto","De Canaán"],
+["¿Cómo se llamaba la suegra de Rut?","Noemí","Débora","Miriam"],
+["¿Qué dijo Rut a su suegra Noemí cuando ella quería regresar sola?","Tu pueblo será mi pueblo y tu Dios será mi Dios","Regresa tú y yo me quedo","Te acompañaré hasta la frontera"],
+["¿Cómo se llamaba el hombre rico que se casó con Rut?","Booz","Elimelec","Mahlon"],
+["¿Qué hacía Rut en los campos para conseguir comida?","Recogía espigas detrás de los segadores","Vendía frutas en el mercado","Trabajaba como sirvienta"],
+["¿Quién fue el bisabuelo famoso que descendió de Rut?","El rey David","El rey Salomón","El profeta Samuel"],
+// ── 1 SAMUEL ──
+["¿Cómo se llamaba la mamá de Samuel que oró a Dios para tener un hijo?","Ana","Noemí","Miriam"],
+["¿Qué prometió Ana a Dios si le daba un hijo?","Que lo dedicaría al servicio del Señor","Que haría un gran sacrificio","Que daría todo su dinero al templo"],
+["¿Dónde dejó Ana al pequeño Samuel para que sirviera a Dios?","Con el sacerdote Elí en el tabernáculo","Con un profeta en el desierto","En el templo de Salomón"],
+["¿Cuántas veces llamó Dios a Samuel de noche?","Tres veces","Una vez","Cuatro veces"],
+["¿Qué pensó Samuel cuando Dios lo llamó la primera vez?","Que era el sacerdote Elí quien lo llamaba","Que soñaba","Que era su mamá"],
+["¿Cuál fue el primer rey de Israel?","Saúl","David","Salomón"],
+["¿Cómo era Saúl físicamente?","Alto y guapo, el más alto del pueblo","Pequeño pero muy fuerte","Gordo y con barba larga"],
+["¿Por qué Dios rechazó a Saúl como rey?","Por no obedecer completamente a Dios","Por ser muy cruel","Por huir de las batallas"],
+["¿De qué familia era David?","De la familia de Isaí, de Belén","De la familia de Saúl","De la tribu de Leví"],
+["¿Qué trabajo hacía David antes de ser ungido rey?","Pastoreaba ovejas","Cultivaba la tierra","Era carpintero"],
+["¿Cuántos hijos tenía Isaí y qué número era David?","Ocho hijos, David era el menor","Siete hijos, David era el mayor","Doce hijos, David era el cuarto"],
+["¿Cuántos años tenía David cuando venció a Goliat?","Era joven adolescente","Tenía 30 años","Tenía 20 años"],
+["¿De dónde era el gigante Goliat?","De Gat, ciudad de los filisteos","De Babilonia","De Egipto"],
+["¿Cuánto medía Goliat aproximadamente?","Casi 3 metros de altura","Dos metros","Cuatro metros"],
+["¿Qué usó David para vencer a Goliat?","Una honda y una piedra","Una lanza pequeña","Sus manos desnudas"],
+["¿Dónde le pegó David a Goliat con la piedra?","En la frente","En el ojo","En el hombro"],
+["¿Qué instrumento musical tocaba David?","El arpa","La flauta","La trompeta"],
+["¿Quién fue el mejor amigo de David entre los hijos del rey?","Jonatán, hijo de Saúl","Abner, el general","Isbóset, su primo"],
+["¿Por qué el rey Saúl quería matar a David?","Porque tenía envidia de su fama y popularidad","Porque David lo traicionó","Porque David era su enemigo"],
+["¿Cuántas veces tuvo David oportunidad de matar al rey Saúl y no lo hizo?","Dos veces","Una vez","Tres veces"],
+// ── 2 SAMUEL / DAVID ──
+["¿A cuántos años de edad fue ungido David como rey de todo Israel?","30 años","25 años","35 años"],
+["¿Qué ciudad conquistó David y la hizo su capital?","Jerusalén","Hebrón","Belén"],
+["¿Qué objeto sagrado trajo David a Jerusalén con gran celebración?","El Arca del Pacto","Las Tablas de la Ley","El candelabro de oro"],
+["¿Qué quería construir David para Dios?","Un templo","Un altar en el campo","Una ciudad entera"],
+["¿Cómo se llamaba el hijo del rey Saúl a quien David trató con bondad?","Mefiboset","Jonatán","Abner"],
+["¿Por qué David trató bien a Mefiboset?","Por amor a su amigo Jonatán, padre de Mefiboset","Porque era pariente","Porque lo salvó una vez"],
+["¿Cuántos Salmos hay en la Biblia que se atribuyen a David?","Muchos, él es el autor de la mayoría","Diez","Cero, los escribió Salomón"],
+["¿Cómo se llamaba el hijo de David que se rebeló contra él?","Absalón","Salomón","Adonías"],
+// ── 1 REYES / SALOMÓN ──
+["¿Quién fue el hijo de David que se convirtió en rey después de él?","Salomón","Absalón","Adonías"],
+["¿Qué le pidió Salomón a Dios cuando Dios le dijo que pidiera lo que quisiera?","Sabiduría para gobernar bien","Riquezas y poder","Una vida muy larga"],
+["¿Qué le dio Dios a Salomón además de sabiduría?","Riquezas y gloria como ningún otro rey","Un ejército invencible","Salud perfecta toda su vida"],
+["¿Qué gran construcción realizó el rey Salomón en Jerusalén?","El Templo de Dios","Un gran palacio solo para el oro","Una muralla alrededor de Israel"],
+["¿Cuántos años tardó la construcción del Templo de Salomón?","Siete años","Cuarenta años","Tres años"],
+["¿Quién vino de lejos a visitar al rey Salomón por su fama de sabio?","La reina de Sabá","La reina de Egipto","La reina de Babilonia"],
+["¿Cuántas esposas y concubinas tuvo el rey Salomón?","Setecientas esposas y trescientas concubinas","Cien esposas","Treinta esposas"],
+["¿Qué pasó con Salomón en su vejez?","Sus esposas extranjeras lo llevaron a adorar ídolos","Se volvió muy cruel","Abandonó el trono"],
+["¿Quién fue el rey que dividió al reino de Israel después de Salomón?","El pueblo se dividió bajo Roboam","Jeroboam lo conquistó","El faraón lo dividió"],
+// ── PROFETAS: ELÍAS ──
+["¿Cómo se llamaba el profeta que anunció que no llovería en Israel por años?","Elías","Eliseo","Isaías"],
+["¿Cómo alimentó Dios a Elías junto al arroyo Querit?","Cuervos le traían pan y carne","Maná caía del cielo","Una viuda le daba comida"],
+["¿Qué milagro hizo Elías en casa de la viuda de Sarepta?","Su harina y aceite no se acabaron","Resucitó a su esposo","Multiplicó el pan"],
+["¿A quién resucitó Elías?","Al hijo de la viuda de Sarepta","A un guerrero israelita","Al hijo del rey"],
+["¿Cuántos profetas de Baal desafió Elías en el Monte Carmelo?","450 profetas de Baal","100 profetas","1.000 profetas"],
+["¿Qué pasó cuando los profetas de Baal llamaron a su dios en el Monte Carmelo?","Nada respondió a su dios","Cayó fuego del cielo","Temblaron de miedo"],
+["¿Qué hizo Elías antes de orar para que cayera fuego del cielo?","Echó mucha agua sobre el altar y el sacrificio","Danzó alrededor del altar","Ayunó cuarenta días"],
+["¿Cómo fue Elías llevado al cielo?","En un carro de fuego con caballos de fuego","Fue subido por ángeles","Voló con alas de águila"],
+["¿Quién recibió el manto de Elías cuando fue llevado al cielo?","Eliseo","Joás","Naamán"],
+["¿Cuántas veces más que Elías pidió Eliseo del espíritu de su maestro?","El doble","El triple","La misma cantidad"],
+// ── PROFETAS: ELISEO ──
+["¿Qué general sirio fue sanado de lepra por Eliseo?","Naamán","Hazael","Ben-adad"],
+["¿Cuántas veces tuvo que bañarse Naamán en el río Jordán para sanarse?","Siete veces","Tres veces","Una vez"],
+["¿Por qué Naamán se enojó con las instrucciones de Eliseo?","Porque pensó que los ríos de Siria eran mejores","Porque tenía que pagar mucho","Porque era un camino muy largo"],
+["¿Qué milagro hizo Eliseo con el aceite de una viuda pobre?","Multiplicó el aceite en todos sus cántaros","Convirtió el agua en aceite","Hizo que el aceite no se acabara por un año"],
+// ── DANIEL ──
+["¿A qué reino fue llevado Daniel como cautivo siendo joven?","Babilonia","Persia","Asiria"],
+["¿Cómo se llamaba el rey de Babilonia que se llevó a Daniel?","Nabucodonosor","Ciro","Darío"],
+["¿Por qué Daniel y sus amigos no quisieron comer la comida del rey?","Porque no quería contaminarse según las leyes de Dios","Porque no les gustaba la comida","Porque tenían miedo"],
+["¿Qué probó Daniel a los guardias: que comer vegetales era mejor que?","Comer la comida del rey durante 10 días","Comer solo carne por un mes","No comer nada"],
+["¿Cómo se llamaban los tres amigos de Daniel en Babilonia?","Sadrac, Mesac y Abed-nego","Sem, Cam y Jafet","Rubén, Simeón y Leví"],
+["¿A qué castigo fueron condenados los tres amigos de Daniel?","Al horno de fuego por no adorar la estatua","Al foso de los leones","A ser esclavos del rey"],
+["¿Qué vio el rey cuando los tres amigos estaban en el horno de fuego?","Cuatro personas caminando sanas en el fuego","Las llamas apagándose solas","A los tres amigos bailando"],
+["¿Quién era la cuarta persona que el rey vio en el horno de fuego?","El Hijo de Dios o un ángel","Un profeta de Israel","Un mensajero del rey"],
+["¿Cuántas veces al día oraba Daniel mirando hacia Jerusalén?","Tres veces","Dos veces","Una vez"],
+["¿Por qué metieron a Daniel en el foso de los leones?","Porque seguía orando a Dios aunque estaba prohibido","Porque insultó al rey","Porque desobedeció una orden militar"],
+["¿Qué pasó con Daniel en el foso de los leones?","Los leones no le hicieron daño porque Dios envió un ángel","Los leones estaban dormidos","Daniel los amansó con su voz"],
+["¿Qué le pasó a quienes acusaron a Daniel y los echaron al foso de leones?","Los leones los devoraron","Fueron perdonados","Huyeron del país"],
+["¿Qué palabras misteriosas aparecieron escritas en la pared durante el banquete del rey Belsasar?","Mene, Mene, Tekel, Uparsin","Shalom, Amén, Gloria","Kadosh, Kadosh, Kadosh"],
+["¿Qué significaron las palabras en la pared del palacio?","El reino del rey sería dividido y acabado","El rey tendría gran victoria","Habría paz en el reino"],
+// ── ESTER ──
+["¿Cómo se llamaba la reina judía que salvó a su pueblo en Persia?","Ester","Débora","Rut"],
+["¿Cómo se llamaba el primo de Ester que la crió?","Mardoqueo","Amán","Mordecai Junior"],
+["¿Quién quería matar a todos los judíos en el reino persa?","Amán","El rey Asuero","El gobernador Vasti"],
+["¿Por qué quería Amán destruir a los judíos?","Porque Mardoqueo no se inclinaba ante él","Porque le robaron dinero","Porque eran sus enemigos de guerra"],
+["¿Qué hizo la reina Ester para salvar a su pueblo?","Fue ante el rey sin ser llamada, arriesgando su vida","Escribió una carta al rey","Huyó con todos los judíos"],
+["¿Cuántos días ayunó Ester antes de ir ante el rey?","Tres días","Siete días","Un día"],
+["¿Qué pasó con Amán al final?","Fue colgado en la horca que él había preparado para Mardoqueo","Fue desterrado del reino","Fue convertido en esclavo"],
+["¿Cómo se llama la fiesta judía que recuerda la historia de Ester?","Purim","Pascua","Pentecostés"],
+// ── JONÁS ──
+["¿A qué ciudad grande envió Dios al profeta Jonás?","Nínive","Babilonia","Egipto"],
+["¿Por qué Jonás no quiso ir a Nínive?","Porque no quería que Dios perdonara a esos enemigos","Porque le daba miedo el camino","Porque amaba a esa ciudad"],
+["¿Qué hizo Jonás en lugar de ir a Nínive?","Tomó un barco en dirección contraria hacia Tarsis","Fue a Babilonia primero","Se escondió en el desierto"],
+["¿Qué pasó cuando el barco en que iba Jonás fue sacudido por la tormenta?","Jonás confesó ser la causa y lo echaron al mar","Jonás oró y la tormenta paró","El barco llegó a un puerto seguro"],
+["¿Qué se tragó a Jonás en el mar?","Un gran pez","Una ballena enorme","Un tiburón gigante"],
+["¿Cuántos días estuvo Jonás dentro del gran pez?","Tres días y tres noches","Siete días","Un día entero"],
+["¿Qué hizo Jonás dentro del gran pez?","Oró a Dios y se arrepintió","Durmió todo el tiempo","Trató de escapar"],
+["¿Qué hizo el gran pez con Jonás al final?","Lo vomitó en tierra seca","Lo llevó a Nínive","Lo soltó en un arrecife"],
+["¿Qué hizo el pueblo de Nínive cuando Jonás les predicó?","Se arrepintieron y Dios los perdonó","Lo rechazaron y lo encerraron","Construyeron un altar para Jonás"],
+["¿Cómo reaccionó Jonás cuando Dios perdonó a Nínive?","Se enojó mucho con Dios","Celebró con el pueblo","Regresó a Israel contento"],
+["¿Qué planta hizo Dios crecer para darle sombra a Jonás?","Una calabacera","Un olivo","Una palmera"],
+// ── NOTAS EXTRAS: PERSONAJES MENORES ──
+["¿Cómo se llamaba el primer sacerdote de Israel?","Aarón","Leví","Finees"],
+["¿Quién tocó el arca del Pacto y murió por eso?","Uza","Obed-Edom","Ahimelec"],
+["¿Cómo se llamaba el hijo que tuvo David con Betsabé?","Salomón","Absalón","Adonías"],
+["¿Qué profeta reprendió al rey David por su pecado con Betsabé?","Natán","Elías","Samuel"],
+["¿Cómo se llama el libro de la Biblia que contiene muchos poemas y canciones?","Salmos","Proverbios","Job"],
+["¿Quién escribió el libro de Proverbios en su mayor parte?","El rey Salomón","El rey David","El profeta Samuel"],
+["¿Cuál fue la prueba más grande que vivió Job?","Perdió todo lo que tenía: hijos, salud y riquezas","Fue llevado cautivo a Babilonia","Fue perseguido por el rey"],
+["¿Qué pasó con Job al final de su historia?","Dios le restauró el doble de todo lo que perdió","Murió pobre","Nunca se recuperó"],
+["¿Cómo se llamaba la madre del juez Samuel?","Ana","Noemí","Miriam"],
+["¿Quién ungió a David como rey?","Samuel el profeta","Elías","Aarón"],
+["¿Cuántos hermanos mayores de David pasaron ante Samuel antes que él?","Siete","Seis","Diez"],
+["¿Qué dijo Dios a Samuel cuando veía a los hijos de Isaí?","El hombre mira lo de afuera pero Dios mira el corazón","El más alto será el rey","El más inteligente será elegido"],
+["¿Qué animal mató David siendo pastor para proteger sus ovejas?","Un oso y un león","Solo un lobo","Un leopardo"],
+["¿Dónde guardó David la cabeza de Goliat después de vencerlo?","La llevó a Jerusalén","La enterró en el campo","La guardó en su tienda"],
+["¿Cómo se llamaba la esposa del rey Saúl que David tomó después?","Mical, hija de Saúl","Abigail","Betsabé"],
+["¿Por qué Abigail es famosa en la Biblia?","Fue una mujer inteligente y valiente que evitó una tragedia","Fue la madre del rey Salomón","Fue la esposa del profeta Samuel"],
+["¿Qué fue el Arca del Pacto?","Una caja de madera cubierta de oro que contenía los mandamientos","El barco de Noé","El trono del rey David"],
+["¿Qué estaba dentro del Arca del Pacto?","Las tablas de los diez mandamientos, maná y la vara de Aarón","Solo los diez mandamientos","Las escrituras de Moisés"],
+["¿Cuántos mandamientos le dio Dios a Moisés en el Sinaí?","Diez","Doce","Siete"],
+["¿Cuál es el mandamiento que dice que debemos honrar a nuestros padres?","El quinto mandamiento","El cuarto mandamiento","El sexto mandamiento"],
+["¿Cuántos libros tiene el Antiguo Testamento?","39 libros","27 libros","66 libros"],
+["¿Cuál es el libro más largo de la Biblia?","Salmos","Génesis","Isaías"],
+["¿Cuál es el versículo más corto de la Biblia?","Jesús lloró","En el principio","Dios es amor"],
+["¿Qué significa el nombre 'Israel'?","Luchó con Dios","Elegido de Dios","Servidor del Señor"],
+["¿Por qué pueblo de Israel pasó 40 años en el desierto?","Por su desobediencia y falta de fe","Porque se perdieron","Porque esperaban a Moisés"],
+["¿Quién escribió los primeros cinco libros de la Biblia?","Moisés","Josué","Samuel"],
+["¿Cómo se llaman los primeros cinco libros de la Biblia?","La Torá o Pentateuco","Los Salmos","Los Profetas"],
+["¿Cuántos apóstoles tuvo Jesús? (dato del NT pero muy conocido)","Doce","Siete","Diez"],
+["¿Cuál es el río más importante de la tierra de Israel?","El Jordán","El Nilo","El Éufrates"],
+["¿En qué ciudad nació el rey David?","Belén","Jerusalén","Hebrón"],
+["¿Qué significa 'Mesías'?","El ungido, el escogido de Dios","El poderoso","El sabio"],
+["¿Qué profeta fue conocido por sus visiones de ruedas y animales extraños?","Ezequiel","Daniel","Isaías"],
+["¿Qué profeta fue llevado al cielo sin morir, igual que Elías?","Enoc, en el Génesis","Samuel","Eliseo"],
+["¿Cuánto vivió Matusalén, el hombre más longevo de la Biblia?","969 años","500 años","800 años"],
+["¿Quién es conocido como el hombre más sabio que ha existido?","El rey Salomón","El profeta Daniel","El profeta Isaías"],
+["¿Cómo se llamaba el primer sumo sacerdote de Israel?","Aarón","Sadoc","Abiatar"],
+["¿Qué hijo de Noé fue el ancestro de los pueblos africanos según la tradición bíblica?","Cam","Sem","Jafet"],
+["¿Qué tribu de Israel fue la encargada del servicio en el templo?","La tribu de Leví","La tribu de Judá","La tribu de Efraín"],
+["¿Quién construyó el tabernáculo (tienda sagrada) en el desierto?","Fue construido según instrucciones de Dios a Moisés por Bezaleel","El propio Moisés con sus manos","Los sacerdotes levitas"],
+["¿Cuántos hijos de Jacob formaron las doce tribus de Israel?","Doce (más Efraín y Manasés por José)","Diez","Catorce"],
+["¿Cómo se llamaba el monte donde Elías escuchó la voz quieta y delicada de Dios?","Horeb","Sinaí","Carmelo"],
+["¿Qué profeta anunció el nacimiento de Jesús con estas palabras: una virgen concebirá?","Isaías","Jeremías","Ezequiel"],
+["¿Cuántos libros proféticos hay en el Antiguo Testamento?","17 libros (5 mayores y 12 menores)","10 libros","7 libros"],
+["¿Qué animal representaba a la tribu de Judá?","El león","El águila","El toro"],
+["¿Qué pasó cuando Moisés levantó la serpiente de bronce en el desierto?","Quien la miraba sanaba de la picadura de serpientes","Quien la tocaba moría","Quien la adoraba se hacía fuerte"],
+["¿Cómo se llamaba el monte donde Dios dio los 10 mandamientos a Moisés?","Monte Sinaí","Monte Nebo","Monte Carmelo"],
+["¿Qué idioma usaron originalmente para escribir el Antiguo Testamento?","Hebreo (y algo de arameo)","Latín","Griego"],
+["¿Cuántas historias de creación hay en Génesis?","Dos relatos de la creación","Una sola historia","Tres historias distintas"],
+["¿Qué año bíblico celebraban los israelitas cada 50 años con libertad para todos?","El año del Jubileo","El año Sabático","El año de la Pascua"],
+["¿Cuántos días dura la fiesta de la Pascua judía?","Siete días","Un día","Cuarenta días"],
+["¿Cómo se llama el día de descanso semanal en la ley de Moisés?","El Sabbat o Sábado","El Domingo","El Jubileo"],
+["¿Qué son los Salmos?","Poemas y canciones de alabanza, oración y adoración a Dios","Las leyes de Moisés","Los relatos de los profetas"],
+["¿En qué libro de la Biblia se cuenta la historia de Job?","En el libro de Job","En Salmos","En Proverbios"],
+["¿Quién fue el padre de Salomón?","El rey David","El rey Saúl","Jonatán"],
+["¿Qué fruta usó Eva cuando pecó según la tradición popular (aunque la Biblia no especifica)?","Una manzana (la Biblia dice 'el fruto')","Un racimo de uvas","Un higo"],
+["¿Cuánto tiempo duró el diluvio en total desde que llovió hasta que bajó el agua?","Más de un año","40 días exactos","80 días"],
+["¿En qué montaña descansó el arca de Noé?","En el Monte Ararat","En el Monte Sinaí","En el Monte Hermón"],
+["¿Qué nombre recibió el primer hijo de Adán y Eva?","Caín","Abel","Set"],
+["¿Quién fue Set?","El tercer hijo de Adán y Eva","El hermano de Noé","El abuelo de Abraham"],
+["¿Cuántas hijas podemos contar en la familia de Lot?","Dos hijas","Una hija","Tres hijas"],
+["¿Cómo se llamaba la ciudad gemela de Sodoma que también fue destruida?","Gomorra","Babilonia","Nínive"],
+["¿Por qué destruyó Dios Sodoma y Gomorra?","Porque sus habitantes eran muy malvados","Porque no pagaban impuestos al rey","Porque no construyeron el templo"],
+["¿A quién le dijo Dios que construyera el arca: a Noé o a Abrahán?","A Noé","A Abrahán","A Moisés"],
+["¿Qué significa el nombre 'Moisés' en el idioma egipcio?","Sacado de las aguas","Siervo del río","Hijo del faraón"],
+["¿En qué consistió el milagro del maná?","Dios lo enviaba cada mañana del cielo excepto el sábado","Brotaba de las piedras del desierto","Los ángeles lo dejaban en las puertas de las tiendas"],
+["¿Qué ocurrió el día que Josué oró para que el sol se detuviera?","El sol se detuvo por casi un día completo","Hubo un eclipse total","La noche tardó en llegar"],
+["¿Cómo cruzó el pueblo de Israel el Mar Rojo?","A pie por en medio del mar con muros de agua a los lados","En balsas de madera","Nadando con la protección de Dios"],
+["¿Cuántos milagros realizó Moisés frente al faraón además de las plagas?","Convirtió su vara en serpiente y el agua en sangre antes","Ninguno, solo las plagas","Habló con truenos y relámpagos"],
+["¿Qué tribu de Israel recibió a Jerusalén como su ciudad?","La tribu de Judá","La tribu de Benjamín","La tribu de Efraín"],
+["¿Cómo se llamaba el yerno de Saúl que era David?","David se casó con Mical, hija de Saúl","Jonatán era su cuñado","Abner era su primo político"],
+["¿Quién fue Goliat en la Biblia?","Un guerrero gigante filisteo al que David venció","Un rey poderoso de Babilonia","Un profeta falso de Baal"],
+["¿Cuántas piedras tomó David para enfrentar a Goliat?","Cinco piedras del arroyo","Tres piedras","Solo una piedra"],
+["¿Qué significa el nombre 'Jesús' (dato relevante del AT también)?","Dios salva o el Señor es salvación","El poderoso","El rey eterno"],
+["¿Cuál es el primer libro de la Biblia?","Génesis","Éxodo","Salmos"],
+["¿Cuál es el último libro del Antiguo Testamento?","Malaquías","Apocalipsis","Daniel"],
+["¿Quién escribió el libro de los Salmos en su mayor parte?","El rey David","Salomón","Asaf y los hijos de Coré"],
+["¿Qué significa 'Génesis'?","Principio u origen","Creación de Dios","El libro del inicio"],
+["¿Qué construyó el rey Salomón además del Templo?","Un magnífico palacio real","Un gran acueducto","Una enorme muralla alrededor de Jerusalén"],
+["¿Cómo se llamaba el profeta que fue arrebatado al cielo en torbellino?","Elías","Eliseo","Enoc"],
+["¿Quién fue el profeta que dijo al rey David: Tú eres ese hombre?","Natán","Samuel","Elías"],
+["¿Cómo se llamaba el hijo que David tuvo con Betsabé y llegó a ser rey?","Salomón","Absalón","Adonías"],
+["¿Cuántas horas estuvo Jesús en la tumba? (Tipo: cuántos días estuvo Jonás en el pez)","Tres días (como Jonás en el pez)","Un día y una noche","Cuarenta horas"],
+["¿Por qué el libro de Job es importante?","Responde a la pregunta de por qué los buenos sufren","Es el más largo de la Biblia","Contiene los 10 mandamientos"],
+["¿Quién fue el primero en entrar a la tierra prometida de los doce espías?","Josué y Caleb fueron los únicos que confiaron en Dios","Solo Josué","Los doce juntos al final"],
+["¿Qué significa 'Arca del Pacto'?","La caja santa que representaba la presencia de Dios","El barco de Noé","El cofre del tesoro del rey"],
+["¿Cuántos años estuvo el pueblo de Israel esclavizado en Egipto?","Aproximadamente 400 años","100 años","200 años"],
+["¿Cómo se llama el profeta que fue tragado por un pez?","Jonás","Elías","Naamán"],
+["¿Qué hizo Rahab para ayudar a los espías israelitas?","Los escondió en su casa y les ayudó a escapar","Les dio comida y agua","Les mostró el mapa de Jericó"],
+["¿De qué tribu descendía el rey Saúl?","De la tribu de Benjamín","De la tribu de Judá","De la tribu de Efraín"],
+["¿De qué tribu descendía el rey David?","De la tribu de Judá","De la tribu de Benjamín","De la tribu de Leví"],
+["¿Cuál fue el primer juez de Israel mencionado en el libro de Jueces?","Otoniel","Gedeón","Débora"],
+["¿Qué profeta fue el maestro de Eliseo?","Elías","Samuel","Natán"],
+["¿Qué comió Elías debajo del árbol de enebro cuando estaba deprimido?","Una torta cocida y agua que un ángel le trajo","Maná que cayó del cielo","Pan que le trajo un cuervo"],
+["¿Cómo se llamaba el rey malvado de Israel que fue influenciado por la reina Jezabel?","Acab","Amán","Belsasar"],
+["¿Qué hizo la malvada reina Jezabel para apoderarse del viñedo de Nabot?","Acusó falsamente a Nabot y lo mandó matar","Le ofreció mucho dinero","Le robó el viñedo mientras dormía"],
+["¿Qué profeta anunció 70 años de cautiverio en Babilonia para Israel?","Jeremías","Isaías","Ezequiel"],
+["¿En qué río fue bautizado Jesús? (dato que también conecta con el AT)","En el río Jordán","En el río Nilo","En el Mar de Galilea"],
+["¿Quién fue el último profeta del Antiguo Testamento?","Malaquías","Zacarías","Hageo"],
+["¿Qué tipo de oración hizo el rey Salomón cuando dedicó el Templo?","Una oración muy larga y hermosa pidiendo que Dios escuchara desde el cielo","Solo un sacrificio sin palabras","Cantó un salmo de alabanza"],
+["¿Qué significa el nombre 'Israel' que Dios le dio a Jacob?","Príncipe de Dios o luchó con Dios","Siervo fiel","Amado del Señor"],
+["¿Cómo se llamaba el padre de Abrahán?","Taré","Sem","Nacor"],
+["¿Cuántos años vivió Abrahán?","175 años","120 años","200 años"],
+["¿Qué animal ofreció Abrahán en sacrificio en lugar de Isaac?","Un carnero que estaba enredado en un arbusto","Un cordero del rebaño","Un becerro"],
+["¿Cómo se llamaba la ciudad donde Abrahán enterró a Sara?","Hebrón (cueva de Macpela)","Belén","Siquem"],
+["¿Qué instrucción especial dio José para cuando muriera en Egipto?","Que llevaran sus huesos a la tierra prometida","Que lo enterraran en Egipto","Que hicieran una gran pirámide"],
+["¿Cómo supo el faraón que había alguien que podía interpretar sus sueños?","El copero del faraón recordó que José interpretó sus sueños en la cárcel","Un sueño diferente se lo reveló","Un sabio de la corte lo recomendó"],
+["¿Qué hizo José para conservar el grano durante los 7 años de abundancia?","Almacenó grano en grandes depósitos en todas las ciudades","Lo guardó en el palacio del faraón","Lo envió a otros países"],
+["¿Qué objeto especial plantó José en el saco de su hermano Benjamín?","Su copa de plata","Un anillo de oro","El contrato de compra de grano"],
+["¿Qué dijeron los hermanos de José cuando él se reveló a ellos?","Quedaron pasmados y no podían hablar de la sorpresa","Lloraron de alegría inmediatamente","Huyeron de miedo"],
+["¿Qué edad tenía José cuando fue vendido por sus hermanos?","17 años","15 años","20 años"],
+["¿Cuántos años estuvo José en la cárcel?","Al menos dos años después de interpretar sueños del copero","Diez años","Cinco años"],
+["¿Qué dijo José a sus hermanos sobre su venta como esclavo?","Ustedes pensaron hacerme mal pero Dios lo cambió en bien","No los perdonó hasta años después","Nunca les dijo nada al respecto"],
+["¿Cómo se llamaba la ciudad donde los israelitas construyeron como esclavos en Egipto?","Pitón y Ramesés","Tebas y Menfis","Alejandría y Heliópolis"],
+["¿Qué hizo el faraón cuando escuchó que la familia de José llegaba a Egipto?","Los invitó a vivir en la mejor tierra, Gosén","Los puso a trabajar inmediatamente","Los encerró por seguridad"],
+["¿Quiénes eran los amalecitas en la Biblia?","Enemigos del pueblo de Israel en el desierto","Los constructores de la Torre de Babel","Los habitantes de Sodoma"],
+["¿Qué juez de Israel hizo un voto que luego le causó una gran tristeza?","Jefté","Sansón","Gedeón"],
+["¿Cuántos años juzgó Samuel al pueblo de Israel?","Toda su vida","Veinte años","Cuarenta años"],
+["¿Qué hizo el rey Saúl que estaba prohibido antes de una batalla?","Ofreció un sacrificio él mismo en lugar de esperar a Samuel","Huir del campo de batalla","Desobedecer las órdenes de su general"],
+["¿Cuántos años reinó el rey David?","Cuarenta años","Treinta años","Veinte años"],
+["¿Cuántos años reinó el rey Salomón?","Cuarenta años","Veinte años","Treinta años"],
+["¿Qué pasó con el Templo de Salomón?","Fue destruido por el rey de Babilonia Nabucodonosor","Se derrumbó solo con el tiempo","Fue quemado por el rey Acab"],
+["¿Quién reconstruyó el Templo de Jerusalén después del cautiverio?","Zorobabel y luego Herodes lo amplió","El rey Darío de Persia","El profeta Esdras"],
+["¿Qué profeta llamó a Dios como fuego consumidor?","Moisés en el Deuteronomio","Elías en el Carmelo","Isaías en su visión"],
+["¿Qué profeta vio los serafines y el trono de Dios en su llamado?","Isaías","Ezequiel","Zacarías"],
+["¿Cuántas alas tenían los serafines que vio Isaías?","Seis alas","Cuatro alas","Dos alas"],
+["¿Qué tocó el serafín a los labios de Isaías en su visión?","Una brasa del altar","Una hoja de oro","Una pluma de su ala"],
+["¿Qué versículo dice: Porque de tal manera amó Dios al mundo?","Juan 3:16, aunque es del NT también muy famoso","Salmos 23:1","Isaías 53:6"],
+["¿Qué Salmo comienza con: El Señor es mi pastor?","El Salmo 23","El Salmo 1","El Salmo 100"],
+["¿Qué dice el Salmo 23 que el Señor hace por nosotros?","Nada me faltará, nos guía por sendas de justicia","Nos da todo el dinero","Nos protege de los enemigos siempre"],
+["¿Cuántos libros de poesía hay en el Antiguo Testamento?","Cinco (Job, Salmos, Proverbios, Eclesiastés, Cantares)","Tres","Siete"],
+["¿Qué significa la palabra 'Aleluya'?","Alaben al Señor o alabado sea Dios","Gracias a Dios","Dios es grande"],
+["¿Qué hizo Dios el día que descansó?","Bendijo y santificó ese día","Creó más cosas pequeñas","Observó lo que había creado"],
+["¿Cuántos mandamientos hablan de nuestra relación con Dios?","Los cuatro primeros","Los seis primeros","Los tres primeros"],
+["¿Cuántos mandamientos hablan de nuestra relación con otras personas?","Los seis últimos","Los cuatro últimos","Los siete últimos"],
+["¿Qué mandamiento dice que no debemos mentir?","No dirás falso testimonio contra tu prójimo","No robarás","No codiciarás"],
+["¿Qué mandamiento prohíbe el robo?","No robarás","No matarás","No mentirás"],
+["¿Cuál fue el mandamiento que Jesús dijo era el más importante?","Amar a Dios con todo el corazón (y al prójimo)","No matar","Honrar el día de reposo"],
+["¿Qué promesa hizo Dios a Abrahán que beneficiaría a todas las familias de la tierra?","Que en su descendencia serían benditas todas las naciones","Que le daría mucho ganado","Que le daría una tierra muy grande"],
+["¿Cuándo celebraba Israel la fiesta de los Tabernáculos?","Al final de la cosecha, recordando el desierto","En la primavera","Al inicio del año nuevo"],
+["¿Qué es el Libro de los Salmos?","El libro de canciones y poemas de la Biblia","El libro de la ley","El libro de los profetas"],
+["¿Quién fue el profeta que enfrentó a los 450 profetas de Baal?","Elías","Eliseo","Samuel"],
+["¿En cuántas partes se divide la Biblia?","Dos: Antiguo y Nuevo Testamento","Tres partes","Cuatro partes"],
+["¿Qué significa 'Testamento' en la Biblia?","Pacto o alianza entre Dios y su pueblo","Libro antiguo","Historia sagrada"],
+// ── MÁS GÉNESIS ──
+["¿Qué significa el nombre 'Adán' en hebreo?","Tierra o barro rojo","Hombre fuerte","Primer ser"],
+["¿Qué hizo Dios para cubrirlos después de que Adán y Eva pecaron?","Les hizo túnicas de piel de animal","Les dio hojas grandes","Los dejó desnudos como castigo"],
+["¿Cómo se llama el lugar donde Dios plantó el jardín para Adán y Eva?","Edén","Canaán","Sinar"],
+["¿Cuántos ríos salían del jardín del Edén?","Cuatro ríos","Dos ríos","Un río grande"],
+["¿Quién fue el hijo de Adán y Eva que reemplazó a Abel?","Set","Caín","Enoc"],
+["¿Quién fue Enoc en el Génesis?","Un hombre tan bueno que Dios lo llevó sin morir","El padre de Noé","El hermano de Sem"],
+["¿De quién fue el nieto Noé?","De Matusalén, el hombre más anciano de la Biblia","De Enoc directamente","De Set"],
+["¿Cuántos animales de cada especie entró al arca: dos o siete?","Dos de animales impuros, siete de los puros","Solo dos de cada uno","Diez de cada especie"],
+["¿Qué comían los animales dentro del arca durante el diluvio?","La comida que Noé preparó y almacenó","El maná que Dios enviaba","Plantas que crecían dentro del arca"],
+["¿Por cuánto tiempo estuvo el agua sobre la tierra después del diluvio?","Más de cinco meses","Exactamente 40 días","Dos meses"],
+["¿A qué edad de Noé comenzó el diluvio?","A los 600 años de Noé","A los 500 años","A los 400 años"],
+["¿Qué significa el nombre 'Noé'?","Descanso o alivio","Agua y vida","Justo y recto"],
+["¿Cuántas personas se salvaron en el arca con Noé?","Ocho personas (Noé, su esposa, tres hijos y sus esposas)","Cuatro personas","Doce personas"],
+["¿Qué le prometió Dios a Abrahán sobre el número de sus descendientes?","Serían tan numerosos como las estrellas del cielo y la arena del mar","Solo tendría 12 hijos","Tendría mil descendientes"],
+["¿Cuántos años tenía Abrahán cuando nació Isaac?","100 años","80 años","90 años"],
+["¿Cómo se llamaba la tierra que Dios prometió a Abrahán?","Canaán","Egipto","Mesopotamia"],
+["¿Qué hizo Dios con Abrahán como señal del pacto?","Le ordenó la circuncisión como señal del pacto","Le dio un anillo especial","Le marcó con fuego"],
+["¿Cuántos ángeles visitaron a Abrahán antes de destruir Sodoma?","Tres visitantes (uno era el Señor)","Dos ángeles","Un solo ángel"],
+["¿Qué oración hizo Abrahán por Sodoma?","Pidió que la ciudad fuera salvada si había 50 justos (llegó hasta 10)","No oró por ellos","Solo oró por Lot"],
+["¿Qué cambio de nombre hizo Dios a Abram?","Lo llamó Abrahán que significa padre de multitudes","Lo llamó Israel","Lo llamó Noé el segundo"],
+["¿Qué cambio de nombre hizo Dios a Sarai?","La llamó Sara que significa princesa","La llamó Miriam","La llamó Rebeca"],
+// ── MÁS ÉXODO ──
+["¿Qué es la fiesta de las Primicias?","Una fiesta de ofrecer los primeros frutos a Dios","Una fiesta de música y baile","Una fiesta del año nuevo"],
+["¿Qué era el tabernáculo en el desierto?","Una tienda especial de reunión con Dios, como templo portátil","El campamento de los israelitas","El lugar donde se guardaba el maná"],
+["¿Quién era el artesano principal que construyó el tabernáculo?","Bezalel de la tribu de Judá","Aarón el sacerdote","Josué el guerrero"],
+["¿Qué había detrás del velo en el lugar santísimo del tabernáculo?","El Arca del Pacto","El candelabro de oro","El altar del incienso"],
+["¿Cuántos brazos tenía el candelabro de oro del tabernáculo?","Siete brazos","Cinco brazos","Diez brazos"],
+["¿Qué representaba la columna de nube de día en el desierto?","La presencia y guía de Dios","Una tormenta que se acercaba","El humo de los sacrificios"],
+["¿Qué usaba Dios para guiar a los israelitas de noche en el desierto?","Una columna de fuego","Un ángel visible","Las estrellas del cielo"],
+["¿Cuándo cayó el maná en el desierto: todos los días o solo algunos?","Todos los días excepto el sábado","Solo los lunes y jueves","Cada tercer día"],
+["¿Qué debían recoger el sexto día de la semana?","El doble de maná para el sábado","La misma cantidad siempre","Solo maná para esa noche"],
+["¿Qué pasaba si guardaban maná para el día siguiente?","Se llenaba de gusanos y apestaba","Se volvía más duro","Se multiplicaba"],
+["¿Cómo era el sabor del maná?","Como obleas con miel","Como pan amargo","Como carne asada"],
+["¿Quién era el ayudante y secretario de Moisés?","Josué su sucesor","Aarón su hermano","Hur su compañero"],
+["¿Qué sostenían Aarón y Hur mientras Moisés tenía los brazos levantados en la batalla?","Sus brazos, para que Israel ganara","Su espada mágica","Las tablas de la ley"],
+["¿Contra quiénes pelearon los israelitas en Refidim?","Contra los amalecitas","Contra los filisteos","Contra los moabitas"],
+["¿Qué pasaba cuando Moisés bajaba los brazos durante la batalla de Refidim?","Amalec ganaba terreno","Israel ganaba más rápido","La batalla se detenía"],
+["¿Dónde hicieron sentar a Moisés para que no se cansara?","Sobre una piedra","En una silla de madera","En el suelo con cojines"],
+["¿Cómo se llamaba el suegro de Moisés que le aconsejó nombrar jueces?","Jetro (también llamado Reuel)","Caleb","Eleazar"],
+["¿Qué consejo dio Jetro a Moisés?","Que nombrara jueces para ayudarle a juzgar al pueblo","Que construyera un palacio","Que delegara la batalla a Josué"],
+["¿Qué fue la tienda de reunión antes del tabernáculo?","Una tienda donde Moisés encontraba a Dios fuera del campamento","El tabernáculo provisional","La tienda del sumo sacerdote"],
+["¿Qué le pasó a la cara de Moisés después de hablar con Dios?","Brillaba con una luz resplandeciente","Se puso roja como el fuego","Se volvió más joven"],
+// ── MÁS NÚMEROS Y DEUTERONOMIO ──
+["¿Qué sonido debían hacer las trompetas de plata en el desierto?","Para mover el campamento, ir a la guerra o celebrar fiestas","Solo para llamar al culto","Solo para alertas de guerra"],
+["¿Quién fabricó las trompetas de plata del desierto?","Moisés por orden de Dios","Bezalel el artesano","Los levitas sacerdotes"],
+["¿Cuántas trompetas de plata hizo Moisés?","Dos trompetas","Una trompeta","Doce trompetas"],
+["¿Qué tribu cargaba el Arca del Pacto cuando marchaban?","Los levitas, sacerdotes de Dios","La tribu de Judá","La tribu de Efraín"],
+["¿Qué le pasó a María (hermana de Moisés) cuando criticó a su hermano?","Le dio lepra como castigo de Dios","Fue desterrada del campamento","Perdió la voz"],
+["¿Cuántos días estuvo María fuera del campamento por la lepra?","Siete días","Tres días","Cuarenta días"],
+["¿Cómo se llamaba el cuñado de Moisés, esposo de María?","La Biblia no habla del esposo de María","Caleb","Hur"],
+["¿Qué hicieron diez de los doce espías al regresar de Canaán?","Dijeron que no podían conquistarla por los gigantes","Dijeron que era fácil entrar","No quisieron hablar de lo que vieron"],
+["¿Qué hizo el pueblo cuando escucharon el informe negativo de los espías?","Lloraron y quisieron volver a Egipto","Prepararon sus armas para luchar","Oraron toda la noche"],
+["¿Qué castigo dio Dios a los diez espías que dieron mal informe?","Murieron de una plaga inmediatamente","Fueron desterrados del campamento","Perdieron su derecho a entrar a Canaán"],
+["¿Qué es el libro de Deuteronomio?","El discurso de despedida de Moisés antes de morir","El libro de las leyes nuevas","El libro del éxodo del desierto"],
+["¿Qué significa la palabra 'Deuteronomio'?","Segunda ley o repetición de la ley","Libro del desierto","Las palabras finales"],
+["¿Qué famosa oración de Israel dice: Escucha Israel, el Señor nuestro Dios es uno?","El Shemá, en Deuteronomio 6:4","El Padre Nuestro","El Salmo 23"],
+// ── MÁS JOSUÉ Y JUECES ──
+["¿Cuántos hombres envió Josué como espías a Jericó?","Dos espías","Tres espías","Doce espías"],
+["¿Cómo escaparon los espías de Josué de la casa de Rahab?","Por una ventana con una cuerda roja","Por el techo de la casa","Por un túnel secreto"],
+["¿Cuántas piedras tomaron del lecho del río Jordán como memorial?","Doce piedras, una por tribu","Siete piedras","Cuarenta piedras"],
+["¿Qué hicieron con las doce piedras del Jordán?","Las pusieron como monumento para recordar el cruce","Las usaron para construir un altar","Las llevaron al tabernáculo"],
+["¿Qué pasó cuando los sacerdotes con el Arca entraron al río Jordán?","El río se partió y quedó seco","El río se volvió más profundo","El río cambió de dirección"],
+["¿Cuántas veces al día marchaba el pueblo alrededor de Jericó los primeros seis días?","Una vez al día","Tres veces al día","Siete veces al día"],
+["¿Cuántas veces marcharon el séptimo día alrededor de Jericó?","Siete veces","Una sola vez","Tres veces"],
+["¿Qué hicieron cuando terminó la séptima vuelta el séptimo día?","El pueblo gritó con fuerza y los muros cayeron","Los sacerdotes tocaron y los muros cayeron","Moisés oró y los muros cayeron"],
+["¿Quién pecó y tomó objetos prohibidos de Jericó?","Acán de la tribu de Judá","Rahab la mesonera","Finees el sacerdote"],
+["¿Por qué Israel perdió en la batalla de Hai?","Por el pecado de Acán que había tomado cosas prohibidas","Porque el ejército era pequeño","Porque no oraron antes de la batalla"],
+["¿Qué pasó con Acán cuando fue descubierto?","Fue apedreado con toda su familia","Solo fue desterrado","Tuvo que devolver lo robado"],
+["¿Cuántas años tenía Josué cuando murió?","110 años","90 años","100 años"],
+["¿Qué dijo Josué al pueblo al final de su vida?","Yo y mi casa serviremos al Señor","Obedezcan al rey que venga","Busquen un nuevo líder"],
+["¿Cómo se llamaba la primera jueza de Israel?","Débora","Dalila","Ester"],
+["¿Quién fue el general de Débora que dirigió el ejército?","Barac","Jefté","Abimelec"],
+["¿Por qué Barac no quiso ir a la batalla sin Débora?","Tenía miedo y necesitaba la seguridad de que Dios estaba con ellos","Era cobarde y perezoso","Las reglas lo exigían así"],
+["¿Quién mató al general enemigo Sísara?","Una mujer llamada Jael que le clavó una estaca","Débora la jueza","Barac el general"],
+["¿Cómo mató Jael al general Sísara?","Lo clavó con una estaca de la tienda mientras dormía","Lo envenenó con leche","Lo ató y entregó a Barac"],
+["¿A cuántos hombres redujo Dios el ejército de Gedeón antes de la batalla?","De 32.000 a 300 hombres","De 10.000 a 300","De 1.000 a 300"],
+["¿Cómo identificó Dios a los 300 hombres de Gedeón?","Los que bebieron agua llevándola con la mano a la boca","Los más fuertes y más altos","Los que llegaron más rápido al río"],
+["¿Qué pusieron los 300 hombres de Gedeón dentro de los cántaros?","Antorchas encendidas","Piedras para tirar","Flechas de fuego"],
+["¿Qué gritaron los hombres de Gedeón al romper los cántaros?","Por el Señor y por Gedeón","Victoria para Israel","Dios es el más grande"],
+["¿Qué animal mató Sansón con sus manos en el camino a Timnat?","Un león joven","Un oso grande","Un toro salvaje"],
+["¿Qué encontró Sansón en el cuerpo del león muerto tiempo después?","Un panal de miel con abejas","Solo los huesos secos","Nada, ya lo habían comido los buitres"],
+["¿Cuántas veces intentó Dalila descubrir el secreto de la fuerza de Sansón?","Varias veces insistentemente","Solo una vez","Dos veces"],
+["¿Qué le dijo Sansón a Dalila las primeras veces sobre su fuerza?","Le mintió con respuestas falsas cada vez","Le dijo la verdad desde el principio","No le habló nada"],
+["¿Con cuántas cuerdas nuevas ataron a Sansón la primera vez?","Con cuerdas de tripa de arco sin secar","Con siete cuerdas gruesas","Con cadenas de hierro"],
+["¿Qué empezó a pasarle al cabello de Sansón cuando lo raparon?","Empezó a crecer de nuevo y su fuerza volvió","Nunca creció otra vez","Creció pero sin fuerza"],
+["¿A qué dios de los filisteos le atribuyeron la victoria sobre Sansón?","A Dagón","A Baal","A Moloc"],
+["¿Cómo pidió Sansón a Dios que le devolviera la fuerza?","Oró pidiendo ser vengado de sus enemigos","Prometió no pecar más","Pidió vivir para siempre"],
+["¿Cuántas personas murieron con Sansón cuando derribó el templo?","Más de las que mató en vida, unos 3.000","Solo los líderes filisteos","Cien personas"],
+// ── MÁS SAMUEL Y REYES ──
+["¿Qué significa el nombre 'Samuel'?","Pedido a Dios o Dios ha escuchado","Siervo del Señor","Elegido del cielo"],
+["¿Qué hizo Ana cuando tuvo a Samuel?","Lo llevó al tabernáculo y lo dedicó a Dios","Lo crió en casa hasta los doce años","Lo mandó a estudiar con los profetas"],
+["¿Cuánto tiempo tardó Ana en llevar a Samuel al tabernáculo?","Hasta que fue destetado (unos 3 años)","Desde que nació","A los siete años"],
+["¿Quién era el ayudante del sacerdote Elí donde creció Samuel?","El propio Samuel fue ayudante de Elí","Sus hijos Ofni y Finees","Un levita mayor"],
+["¿Qué pasó con los hijos del sacerdote Elí?","Eran malvados y murieron en una batalla por el juicio de Dios","Siguieron siendo sacerdotes","Se fueron del tabernáculo"],
+["¿Qué le pasó al Arca del Pacto cuando los filisteos la capturaron?","La pusieron en el templo de su dios Dagón y causó problemas","La destruyeron inmediatamente","La usaron como trofeo de guerra"],
+["¿Qué pasó con la estatua de Dagón cuando pusieron el Arca cerca?","Cayó al suelo dos veces y quedó destrozada","No pasó nada","Se movió sola"],
+["¿Qué enfermedad envió Dios a los filisteos que tenían el Arca?","Tumores o hemorroides y plagas de ratones","Ceguera total","Lepra en todo el pueblo"],
+["¿Cuánto tiempo tuvieron los filisteos el Arca del Pacto?","Siete meses","Un año","Tres años"],
+["¿Cómo devolvieron los filisteos el Arca a Israel?","En un carro tirado por vacas sin guía humana","Por un convenio de paz","Se la entregaron a los sacerdotes"],
+["¿Quién ungió al primer rey de Israel Saúl?","El profeta Samuel","El sacerdote Elí","El propio pueblo"],
+["¿Dónde estaba Saúl cuando Samuel lo buscó para ungirlo rey?","Buscando las asnas perdidas de su padre","Pastoreando sus ovejas","Trabajando en el campo"],
+["¿Qué clase de ropa especial le dio Samuel a Saúl?","Le ungió con aceite y le dio el mando","Le regaló una túnica real","Le puso una corona de oro"],
+["¿Cuántos años tenía Saúl cuando fue proclamado rey?","Unos 30 años según el texto","20 años","40 años"],
+["¿Cómo se llamaba el hijo de Saúl que fue el mejor amigo de David?","Jonatán","Abner","Isboset"],
+["¿Qué hizo Jonatán por David cuando su padre Saúl quería matarlo?","Lo protegió y ayudó a escapar","Lo traicionó para protegerse","Le pidió que se fuera del reino"],
+["¿Qué promesa se hicieron David y Jonatán?","Protegerse mutuamente y sus descendencias para siempre","Gobernar juntos cuando Saúl muriera","Compartir todo lo que tuvieran"],
+["¿Cuándo murió Jonatán?","En la batalla del Monte Gilboa junto a Saúl su padre","En una emboscada filistea solo","De una enfermedad"],
+["¿Cómo honró David la memoria de Jonatán?","Cuidó a su hijo Mefiboset que era cojo","Construyó un monumento en su honor","Nombró a su hijo con el nombre de Jonatán"],
+["¿Qué problema físico tenía Mefiboset, hijo de Jonatán?","Era cojo de los dos pies desde niño","Era ciego de un ojo","Era sordo"],
+["¿Por qué quedó cojo Mefiboset de niño?","Porque su niñera lo dejó caer cuando huían al morir Saúl","Nació así","Se cayó de un caballo"],
+["¿Cómo trataba David a Mefiboset?","Lo invitó a comer siempre en su mesa real","Lo cuidó en casa hasta que murió","Lo nombró consejero del reino"],
+["¿Cuántos Salmos tiene la Biblia en total?","150 Salmos","100 Salmos","200 Salmos"],
+["¿Quién fue el rey más rico que ha existido según la Biblia?","El rey Salomón","El faraón de Egipto","El rey Nabucodonosor"],
+["¿Cuántas palabras de sabiduría o proverbios dijo el rey Salomón?","Tres mil proverbios","Mil proverbios","Quinientos proverbios"],
+["¿Cuántas canciones compuso el rey Salomón?","Mil cinco canciones","Quinientas canciones","Cien canciones"],
+["¿Cuál fue el pecado de Salomón que lo alejó de Dios?","Adorar a los ídolos de sus esposas extranjeras","Robar al pueblo con impuestos","Matar a sus enemigos"],
+["¿Qué profeta confrontó al rey Salomón sobre sus pecados?","La Biblia no menciona un profeta que lo confrontara directamente","Ahías de Siló","Natán"],
+["¿Quién fue el profeta que anunció que el reino se dividiría en dos?","Ahías de Siló, quien rompió su manto en doce pedazos","Natán","Elías"],
+["¿En cuántas partes se dividió el reino de Israel después de Salomón?","En dos reinos: Israel al norte y Judá al sur","En tres partes","En cuatro tribus"],
+["¿Cuántas tribus tuvo el reino del norte (Israel)?","Diez tribus","Seis tribus","Ocho tribus"],
+["¿Cuántas tribus tuvo el reino del sur (Judá)?","Dos tribus: Judá y Benjamín","Cuatro tribus","Tres tribus"],
+["¿Quién fue el primer rey del reino del norte después de la división?","Jeroboam","Roboam","Baasa"],
+["¿Quién fue el primer rey del reino del sur después de la división?","Roboam, hijo de Salomón","Jeroboam","Asa"],
+["¿Qué hizo el rey Jeroboam para que el pueblo no fuera a Jerusalén?","Hizo dos becerros de oro y los puso en Bet-el y Dan","Construyó su propio templo","Destruyó el camino a Jerusalén"],
+// ── MÁS PROFETAS ──
+["¿En qué libro está escrito: En el principio creó Dios los cielos y la tierra?","En Génesis, el primer versículo de la Biblia","En Job","En Salmos"],
+["¿Qué profeta fue llevado de un lugar a otro por el espíritu de Dios?","Ezequiel y también Felipe en el NT","Solo los apóstoles","Elías cuando fue al cielo"],
+["¿Qué profeta comió un rollo de libro en una visión?","Ezequiel (y también Juan en Apocalipsis)","Isaías","Daniel"],
+["¿Qué profeta estaba muy triste y quería morir bajo el árbol de enebro?","Elías después del monte Carmelo","Jeremías en el pozo","Jonás después de predicar"],
+["¿Qué ángel apareció a Elías cuando estaba deprimido?","Un ángel que le dio comida dos veces","El arcángel Miguel","El ángel Gabriel"],
+["¿Cuánto tiempo caminó Elías con la fuerza de esa comida?","Cuarenta días y cuarenta noches hasta Horeb","Siete días","Veinte días"],
+["¿Qué pasó en la montaña cuando Dios quiso revelar su presencia a Elías?","Viento, terremoto y fuego, pero Dios estaba en la voz apacible","Un trueno muy grande","Un rayo brillante del cielo"],
+["¿Qué profeta llamó Elías para ser su sucesor mientras araba con doce yuntas?","Eliseo hijo de Safat","Miqueas","Obed"],
+["¿Cuántas yuntas de bueyes tenía Eliseo cuando Elías lo llamó?","Doce yuntas (estaba en la última)","Cuatro yuntas","Dos yuntas"],
+["¿Qué hizo Eliseo con los bueyes cuando dejó su trabajo para seguir a Elías?","Los mató, los cocinó y dio la carne al pueblo","Los vendió en el mercado","Los regaló a sus vecinos"],
+["¿Cuántos profetas de Dios escondió Abdías del rey Acab y la reina Jezabel?","Cien profetas en dos cuevas de cincuenta en cincuenta","Doce profetas","Cincuenta profetas"],
+["¿Qué pedido hizo Eliseo antes de separarse de Elías?","Una doble porción del espíritu de Elías","El manto de Elías","La vara de poder de Elías"],
+["¿Cómo sabría Eliseo si recibiría la doble porción?","Si veía a Elías ser llevado al cielo","Si llovía en ese momento","Si Dios le hablaba directamente"],
+["¿Qué hizo Eliseo con el manto de Elías después de que se fue al cielo?","Golpeó el río Jordán y se abrió en dos","Lo guardó en el tabernáculo","Lo puso como ofrenda en el altar"],
+["¿Qué enfermedad sanó Eliseo en las aguas de Jericó?","Las aguas malas o saladas que causaban esterilidad","La lepra del agua","Los peces muertos del río"],
+["¿Cómo sanó Eliseo las aguas malas?","Echando sal en el manantial","Orando sobre el agua","Poniendo su mano en el agua"],
+["¿Qué hizo Eliseo cuando los jóvenes se burlaron de su calvicie?","Maldijo en nombre de Dios y salieron osos del bosque","Los ignoró y siguió su camino","Los reprendió con palabras"],
+["¿Qué pasó con un hombre muerto que tocó los huesos de Eliseo en su tumba?","Resucitó y se levantó en pie","No pasó nada","Se convirtió en profeta"],
+// ── MÁS DANIEL Y PROFETAS MENORES ──
+["¿Cuántos años estuvo Israel en cautiverio en Babilonia?","70 años como Jeremías había profetizado","50 años","100 años"],
+["¿Qué rey persa dejó volver a los judíos a su tierra?","El rey Ciro de Persia","El rey Darío","El rey Jerjes"],
+["¿Qué profetizó Isaías sobre el rey Ciro de Persia?","Lo nombró por nombre cien años antes de que naciera","Predijo su derrota","Anunció su conversión"],
+["¿Qué profeta fue echado en un pozo de barro por predicar la verdad?","Jeremías","Isaías","Miqueas"],
+["¿Cómo rescataron a Jeremías del pozo de barro?","Un etíope llamado Ebed-melec lo sacó con cuerdas","Los sacerdotes lo liberaron","Él mismo salió solo"],
+["¿Qué imagen vio Nabucodonosor en su sueño que Daniel interpretó?","Una estatua con cabeza de oro, pecho de plata, vientre de bronce y pies de barro","Un árbol gigante que fue derribado","Siete vacas gordas y siete flacas"],
+["¿Qué representaba la cabeza de oro en el sueño de Nabucodonosor?","El propio reino de Nabucodonosor de Babilonia","El reino de Persia","El reino de Israel"],
+["¿Qué le pasó al rey Nabucodonosor por su orgullo?","Enloqueció y vivió como animal en el campo por 7 años","Murió repentinamente","Fue derrocado por su hijo"],
+["¿Qué reconoció Nabucodonosor al recuperar su juicio?","Que el Dios del cielo es el único Rey verdadero","Que su reino era el más grande","Que debía liberar a los israelitas"],
+["¿Cuántos sátrapas o gobernadores tenía el reino donde vivía Daniel al final?","Ciento veinte sátrapas","Treinta sátrapas","Doce sátrapas"],
+["¿Qué cargo importante tenía Daniel en el reino de los medos y persas?","Era uno de los tres principales gobernadores del reino","Era el escriba real","Era el comandante del ejército"],
+["¿Por qué los otros gobernadores buscaban acusar a Daniel?","Porque tenían envidia de su excelente trabajo para el rey","Porque era extranjero","Porque era más rico que ellos"],
+["¿Cómo se llamaba el rey que echó a Daniel al foso de los leones?","El rey Darío el medo","El rey Nabucodonosor","El rey Belsasar"],
+["¿Qué hizo el rey Darío después de echar a Daniel al foso?","Pasó la noche en ayuno sin comer ni dormir preocupado por Daniel","Celebró con sus cortesanos","Oró a sus dioses"],
+["¿Qué hizo el rey Darío al día siguiente muy temprano?","Corrió al foso de los leones a llamar a Daniel","Esperó el informe de sus guardias","Preparó el funeral de Daniel"],
+["¿Qué respondió Daniel cuando el rey lo llamó en el foso?","Rey, vive para siempre, mi Dios envió su ángel y cerró la boca de los leones","Señor, fui herido pero sobreviví","Rey, tus leones son mansos"],
+["¿Qué decretó el rey Darío después de salvar a Daniel?","Que todo el mundo honrara al Dios de Daniel","Que Daniel fuera el único gobernador","Que se construyera un templo para Dios"],
+["¿En qué libro están las visiones de las cuatro bestias y el Hijo del Hombre?","En el libro de Daniel","En Ezequiel","En Isaías"],
+["¿Cuántos días ayunó Daniel antes de recibir una visión importante?","Veintiún días","Cuarenta días","Siete días"],
+["¿Qué ángel le explicó las visiones a Daniel?","El arcángel Gabriel","El arcángel Miguel","Un ángel sin nombre"],
+// ── PERSONAJES Y DATOS ADICIONALES ──
+["¿Qué significa el nombre 'Ester' o su nombre hebreo 'Hadasa'?","Hadasa significa mirto, Ester puede significar estrella","Reina del cielo","La elegida de Dios"],
+["¿Cuántas noches celebró Ester banquetes antes de pedir al rey que salvara a su pueblo?","Dos noches de banquete","Una noche","Tres noches"],
+["¿A qué provincia fue desterrado el malvado Amán?","Fue ejecutado, no desterrado","A los confines del reino","A la tierra de los judíos"],
+["¿Quién reemplazó a Amán en el cargo de primer ministro?","Mardoqueo el primo de Ester","El hermano del rey","Un general del ejército"],
+["¿Qué escribió Mardoqueo a los judíos después de la victoria?","Cartas ordenando celebrar Purim cada año","Una historia del rey Asuero","Nuevas leyes para los judíos"],
+["¿Cuántos días dura la fiesta de Purim?","Dos días de celebración y alegría","Un día","Siete días"],
+["¿Por qué se llama Purim la fiesta?","Por el pur (suerte) que Amán usó para elegir el día de matar a los judíos","Por el nombre de Ester en persa","Por el rey Asuero que dio el decreto"],
+["¿Cuánto tiempo predicó Noé mientras construía el arca?","La Biblia no lo dice exactamente pero fue muchos años","Cuarenta años","Cien años"],
+["¿Qué tan grande era el arca de Noé?","Unos 135 metros de largo, como metro y medio campos de fútbol","Tan grande como una montaña","Como una ciudad pequeña"],
+["¿De qué madera hizo Noé el arca?","Madera de gofer (ciprés según algunos)","Madera de cedro","Madera de olivo"],
+["¿Cuántos pisos tenía el arca de Noé?","Tres pisos","Dos pisos","Un solo piso grande"],
+["¿Qué ungüento usaron para impermeabilizar el arca de Noé?","Brea por dentro y por fuera","Aceite de oliva","Cera de abejas"],
+["¿Qué libro de la Biblia describe la sabiduría de Salomón con poesía de amor?","El Cantar de los Cantares","El libro de Rut","El Eclesiastés"],
+["¿Qué libro de la Biblia dice que todo es vanidad y correr tras el viento?","El Eclesiastés de Salomón","El libro de Job","Los Proverbios"],
+["¿Qué proverbio famoso dice: Confía en el Señor con todo tu corazón?","Proverbios 3:5","Salmos 23:1","Génesis 1:1"],
+["¿Qué dijo Dios al final de cada día de la creación sobre lo que había hecho?","Que era bueno","Que era perfecto","Que era suficiente"],
+["¿Qué dijo Dios al final del sexto día cuando creó al hombre?","Era bueno en gran manera (muy bueno)","Era perfecto y completo","Era la obra más difícil"],
+["¿Cuándo creó Dios a la mujer?","En el sexto día, después de crear al hombre","En el séptimo día","Al mismo tiempo que al hombre"],
+["¿Cómo nombró Adán a todos los animales?","Dios se los fue trayendo y Adán les puso nombre a todos","Los nombres ya estaban escritos en piedra","Los ángeles le dijeron los nombres"],
+["¿Por qué fue necesario crear a Eva?","Porque no era bueno que Adán estuviera solo","Porque Dios quería más personas","Porque Adán lo pidió"],
+["¿Qué pasaría si comían del árbol de la vida en el jardín del Edén?","Vivirían para siempre, por eso Dios los sacó","Se volverían sabios como Dios","Nada especial pasaría"],
+["¿Por qué Dios puso querubines a la entrada del jardín del Edén?","Para que Adán y Eva no pudieran volver y comer del árbol de la vida","Para proteger el jardín de animales","Para cuidar el árbol del bien y del mal"],
+["¿Cuál fue la primera ofrenda que Caín trajo a Dios?","Frutos de la tierra","Un cordero de su rebaño","Incienso y flores"],
+["¿Por qué Dios no aceptó la ofrenda de Caín?","Porque no la trajo con la actitud correcta del corazón","Porque los frutos estaban en mal estado","Porque Dios quería solo animales"],
+["¿Qué le dijo Dios a Caín antes de que matara a Abel?","Que el pecado estaba a la puerta pero podía dominarlo","Que Abel era su favorito","Que debía dar más ofrendas"],
+["¿Qué marca puso Dios en Caín después de matar a Abel?","Una señal para que nadie lo matara (protección de Dios)","Una marca de vergüenza en la frente","Un símbolo de culpa"],
+["¿Adónde fue Caín después de matar a Abel?","A la tierra de Nod, al oriente del Edén","Al desierto de Neguev","Al otro lado del mar"],
+["¿Quién construyó la primera ciudad según la Biblia?","Caín, que la llamó Enoc por su hijo","Noé después del diluvio","Nimrod el poderoso cazador"],
+["¿Quién fue Nimrod en la Biblia?","Un poderoso cazador, bisnieto de Noé, que construyó reinos","El constructor de la Torre de Babel solamente","Un profeta del tiempo de Abraham"],
+];
+
+// ═══════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════
+const MILESTONES = [10,25,50,100,150,200,300,500];
+const MILESTONE_MSG = ["¡10 puntos! 🔥","¡25 puntos! ⭐","¡50 puntos! 🌟","¡100 puntos! 🏆","¡150 puntos! 💫","¡200 puntos! 🚀","¡300 puntos! 👑","¡500 puntos! 🌈"];
+
+let clockRafId = null;   // requestAnimationFrame id for the game clock
+let clockRunning = false;
+
+let state = {
+  playerName:'',
+  score:0,
+  correct:0,
+  lives:2,
+  elapsed:0,
+  gameStartTime:0,
+  timerInterval:null,
+  qStart:0,
+  usedIdx: new Set(),
+  current:null,
+  answered:false,
+  record:0,
+  lastMilestoneIdx:-1,
+};
+
+function fmtTime(s){
+  const m=Math.floor(s/60), sec=s%60;
+  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+
+// ── INIT ──
+window.onload = function(){
+  state.record = parseInt(localStorage.getItem('aventuras_record')||'0',10);
+};
+
+// ── GAME CLOCK (requestAnimationFrame — never blocked) ──
+function startClock(){
+  clockRunning = true;
+  state.gameStartTime = Date.now();
+  state.elapsed = 0;
+
+  function tick(){
+    if(!clockRunning) return;
+    const secs = Math.floor((Date.now() - state.gameStartTime) / 1000);
+    if(secs !== state.elapsed){
+      state.elapsed = secs;
+      const el = document.getElementById('timeDisplay');
+      if(el) el.textContent = fmtTime(secs);
+    }
+    clockRafId = requestAnimationFrame(tick);
+  }
+
+  if(clockRafId) cancelAnimationFrame(clockRafId);
+  const el = document.getElementById('timeDisplay');
+  if(el) el.textContent = '00:00';
+  clockRafId = requestAnimationFrame(tick);
+}
+
+function stopClock(){
+  clockRunning = false;
+  if(clockRafId){ cancelAnimationFrame(clockRafId); clockRafId = null; }
+  state.elapsed = Math.floor((Date.now() - state.gameStartTime) / 1000);
+}
+
+function startGame(){
+
+  // reset state
+  state.score=0; state.correct=0; state.lives=2; state.elapsed=0;
+  state.usedIdx.clear(); state.answered=false; state.lastMilestoneIdx=-1;
+  stopClock();   // cancela cualquier reloj previo si el usuario reinicia
+
+  showScreen('gameScreen');
+  updateHUD();
+  buildProgressStars();
+  startClock();      // ← inicia el reloj ANTES de nextQuestion para que nada lo bloquee
+  nextQuestion();
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function buildProgressStars(){
+  const container = document.getElementById('progressStars');
+  container.innerHTML='';
+  MILESTONES.forEach(m=>{
+    const span=document.createElement('span');
+    span.textContent='⭐';
+    span.style.opacity='0.3';
+    span.dataset.milestone=m;
+    container.appendChild(span);
+  });
+}
+
+function updateHUD(){
+  const sc = document.getElementById('scoreDisplay');
+  sc.textContent = state.score;
+  sc.classList.remove('score-pop');
+  void sc.offsetWidth; // reflow
+  sc.classList.add('score-pop');
+  const hearts = state.lives>=2?'❤️❤️':(state.lives===1?'❤️💔':'💔💔');
+  document.getElementById('livesDisplay').textContent = hearts;
+  updateProgress();
+}
+
+function updateProgress(){
+  const pct = Math.min(100, (state.score / 500)*100);
+  document.getElementById('progressFill').style.width = pct+'%';
+  // light up stars
+  MILESTONES.forEach((m,i)=>{
+    const star = document.querySelector(`[data-milestone="${m}"]`);
+    if(star){
+      if(state.score >= m){
+        star.style.opacity='1';
+        star.style.transform='scale(1.3)';
+      }
+    }
+  });
+  // check milestones
+  MILESTONES.forEach((m,i)=>{
+    if(state.score>=m && i>state.lastMilestoneIdx){
+      state.lastMilestoneIdx=i;
+      showMilestonePop(MILESTONE_MSG[i]);
+    }
+  });
+}
+
+function showMilestonePop(msg){
+  const el=document.createElement('div');
+  el.className='milestone-pop';
+  el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1600);
+}
+
+// ── QUESTIONS ──
+function getQuestion(){
+  if(state.usedIdx.size >= Q.length) state.usedIdx.clear();
+  let idx;
+  do{ idx=Math.floor(Math.random()*Q.length); }while(state.usedIdx.has(idx));
+  state.usedIdx.add(idx);
+  const base=Q[idx];
+  const correctText=base[1];
+  const opts=[base[1],base[2],base[3]];
+  // Fisher-Yates shuffle
+  for(let i=opts.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [opts[i],opts[j]]=[opts[j],opts[i]];
+  }
+  return{q:base[0], opts, correct:opts.indexOf(correctText)};
+}
+
+function nextQuestion(){
+  state.answered=false;
+  state.current=getQuestion();
+  state.qStart=Date.now();
+
+  // hide last-life warning until needed again
+  if(state.lives===2) document.getElementById('lastLifeWarn').style.display='none';
+
+  // restart bonus bar CSS animation
+  const bar=document.getElementById('bonusBar');
+  bar.classList.remove('running');
+  void bar.offsetWidth;            // force reflow so animation restarts from 0
+  bar.classList.add('running');
+  const secsEl=document.getElementById('bonusSecs');
+  if(secsEl) secsEl.textContent='8s';
+  document.getElementById('tier3').classList.add('active');
+  document.getElementById('tier2').classList.remove('active');
+  document.getElementById('tier1').classList.remove('active');
+
+  document.getElementById('qNumber').textContent=`Pregunta ${state.usedIdx.size}`;
+  document.getElementById('qText').textContent=state.current.q;
+
+  const grid=document.getElementById('optionsGrid');
+  grid.innerHTML='';
+  const labels=['A','B','C'];
+  state.current.opts.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';
+    btn.innerHTML=`<span class="opt-key">${labels[i]}</span>${opt}`;
+    btn.addEventListener('click',()=>answer(i,btn));
+    grid.appendChild(btn);
+  });
+
+  // speed hint
+  updateSpeedHint();
+}
+
+const MAX_BONUS_TIME = 8;
+
+function updateBonusPanel(){
+  if(state.answered) return;
+  const elapsed = (Date.now() - state.qStart) / 1000;
+  const remaining = Math.max(0, MAX_BONUS_TIME - elapsed);
+
+  // countdown number
+  const secsEl = document.getElementById('bonusSecs');
+  if(secsEl) secsEl.textContent = Math.ceil(remaining) + 's';
+
+  // tier highlights
+  document.getElementById('tier3').classList.toggle('active', elapsed < 3);
+  document.getElementById('tier2').classList.toggle('active', elapsed >= 3 && elapsed < 5);
+  document.getElementById('tier1').classList.toggle('active', elapsed >= 5 && elapsed < 8);
+}
+
+// runs every 200ms — only updates text labels and tier glow, NOT the bar width
+const speedHintInterval = setInterval(()=>{
+  if(document.getElementById('gameScreen').classList.contains('active') && !state.answered){
+    updateBonusPanel();
+  }
+}, 200);
+
+function floatPoints(pts, bonus, anchorEl){
+  const rect = anchorEl ? anchorEl.getBoundingClientRect() : {left: window.innerWidth/2, top: window.innerHeight/2};
+  const el = document.createElement('div');
+  el.className = 'pts-pop';
+  const color = bonus===3?'#ffd600': bonus===2?'#ff8c00': bonus===1?'#81c784':'#fff';
+  el.style.color = color;
+  el.style.left = (rect.left + rect.width/2 - 50) + 'px';
+  el.style.top  = (rect.top - 10) + 'px';
+  if(bonus > 0){
+    el.innerHTML = `+5 <span style="font-size:1.7rem;color:${color}">+${bonus} BONUS!</span>`;
+  } else {
+    el.textContent = '+5 pts';
+    el.style.color = '#c8e6c9';
+    el.style.fontSize = '1.8rem';
+  }
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 1100);
+}
+
+function answer(idx, btn){
+  if(state.answered) return;
+  state.answered=true;
+  const elapsed=(Date.now()-state.qStart)/1000;
+
+  const btns=document.querySelectorAll('.opt-btn');
+  btns.forEach(b=>b.disabled=true);
+
+  if(idx===state.current.correct){
+    // CORRECT
+    btn.classList.add('correct');
+    btns[state.current.correct].classList.add('correct');
+    state.correct++;
+
+    let bonus=0;
+    if(elapsed<3) bonus=3;
+    else if(elapsed<5) bonus=2;
+    else if(elapsed<8) bonus=1;
+    state.score+=5+bonus;
+
+    // freeze bonus bar (pause CSS animation at current position)
+    const bar=document.getElementById('bonusBar');
+    bar.style.animationPlayState='paused';
+
+    floatPoints(5, bonus, document.getElementById('scoreDisplay'));
+    updateHUD();
+    showFeedback(bonus===3?'⚡':bonus===2?'🔥':bonus===1?'💡':'🎉');
+    launchConfetti();
+
+    setTimeout(()=>nextQuestion(),950);
+  } else {
+    // WRONG
+    btn.classList.add('wrong');
+    btns[state.current.correct].classList.add('correct');
+    state.lives--;
+
+    // freeze & drain bar to red on error
+    const bar=document.getElementById('bonusBar');
+    bar.style.animationPlayState='paused';
+    bar.style.background='#ef5350';
+
+    updateHUD();
+    showError(state.lives);
+
+    if(state.lives<=0){
+      stopClock();
+      setTimeout(showGameOver,1400);
+    } else {
+      setTimeout(()=>nextQuestion(),1400);
+    }
+  }
+}
+
+function showFeedback(emoji){
+  const fb=document.getElementById('feedback');
+  const fe=document.getElementById('feedbackEmoji');
+  fe.textContent=emoji;
+  fb.style.display='flex';
+  setTimeout(()=>fb.style.display='none',700);
+}
+
+function showError(livesLeft){
+  // card shake
+  const card=document.getElementById('qCard');
+  card.classList.remove('shake');
+  void card.offsetWidth;
+  card.classList.add('shake');
+  setTimeout(()=>card.classList.remove('shake'),650);
+
+  // body border flash
+  document.body.classList.remove('body-flash');
+  void document.body.offsetWidth;
+  document.body.classList.add('body-flash');
+  setTimeout(()=>document.body.classList.remove('body-flash'),750);
+
+  // choose face & message
+  const ov=document.getElementById('errorOverlay');
+  const face=document.getElementById('errorFace');
+  const txt=document.getElementById('errorText');
+
+  if(livesLeft<=0){
+    face.textContent='💔';
+    txt.textContent='¡Se acabaron las vidas!';
+  } else {
+    face.textContent='😢';
+    txt.textContent=`¡Incorrecto! Te queda ${livesLeft} ❤️`;
+  }
+
+  // reset & play overlay animation
+  ov.style.display='flex';
+  // force reflow so animation restarts
+  face.style.animation='none'; txt.style.animation='none';
+  void ov.offsetWidth;
+  face.style.animation=''; txt.style.animation='';
+
+  const dur = livesLeft<=0 ? 1300 : 1100;
+  setTimeout(()=>{ ov.style.display='none'; }, dur);
+
+  // last-life sticky banner
+  const warn=document.getElementById('lastLifeWarn');
+  if(livesLeft===1){
+    warn.style.display='block';
+    // hide it when next question loads
+  } else {
+    warn.style.display='none';
+  }
+}
+
+// ── CONFETTI ──
+function launchConfetti(){
+  const colors=['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#f06ef6','#ff9f1c'];
+  for(let i=0;i<40;i++){
+    const piece=document.createElement('div');
+    piece.className='confetti-piece';
+    piece.style.left=Math.random()*100+'vw';
+    piece.style.background=colors[Math.floor(Math.random()*colors.length)];
+    piece.style.width=(8+Math.random()*8)+'px';
+    piece.style.height=(10+Math.random()*10)+'px';
+    piece.style.borderRadius=Math.random()>0.5?'50%':'2px';
+    const dur=1.2+Math.random()*1.4;
+    piece.style.animationDuration=dur+'s';
+    piece.style.animationDelay=Math.random()*0.4+'s';
+    document.body.appendChild(piece);
+    setTimeout(()=>piece.remove(),(dur+0.5)*1000);
+  }
+}
+
+// ── GAME OVER ──
+function showGameOver(){
+  stopClock();   // safe to call again — idempotent
+
+  const isRecord = state.score > state.record;
+  if(isRecord){
+    state.record=state.score;
+    localStorage.setItem('aventuras_record',state.score);
+  }
+
+  let emoji='😊', title='¡Bien jugado!', subtitle='¡Sigue practicando!';
+  if(state.score>=300){ emoji='🏆'; title='¡INCREÍBLE!'; subtitle='¡Eres un campeón bíblico!'; }
+  else if(state.score>=150){ emoji='🌟'; title='¡Excelente!'; subtitle='¡Conoces muy bien la Biblia!'; }
+  else if(state.score>=75){ emoji='😄'; title='¡Muy bien!'; subtitle='¡Vas aprendiendo mucho!'; }
+  else if(state.score>=30){ emoji='🙂'; title='¡Bien!'; subtitle='¡Practica un poco más!'; }
+  else { emoji='😔'; title='¡No te rindas!'; subtitle='¡Lee más la Biblia y vuelve a intentarlo!'; }
+
+  document.getElementById('overEmoji').textContent=emoji;
+  document.getElementById('overTitle').textContent=title;
+  document.getElementById('overSubtitle').textContent=subtitle;
+  document.getElementById('finalScore').textContent=state.score;
+  document.getElementById('finalCorrect').textContent=state.correct;
+  document.getElementById('finalTime').textContent=fmtTime(state.elapsed);
+  document.getElementById('finalRecord').textContent=state.record;
+
+  const badge=document.getElementById('recordBadge');
+  if(isRecord){ badge.classList.add('visible'); launchConfetti(); }
+  else badge.classList.remove('visible');
+
+  showScreen('gameoverScreen');
+}
+
+function restartGame(){
+  startGame();
+}
+</script>
+</body>
+</html>
