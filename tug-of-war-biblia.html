@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tug of War: Conocimiento Bíblico</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Georgia, serif;
+    background: linear-gradient(135deg, #1a0a00, #3d1f00, #1a0a00);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ── PANTALLA DE INICIO ── */
+  #startScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    text-align: center;
+    animation: fadeIn .5s ease;
+    padding: 20px;
+  }
+  .logo-title {
+    font-size: clamp(1.8rem, 4.5vw, 3rem);
+    font-weight: 900;
+    color: #fde68a;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    text-shadow: 0 0 30px rgba(253,211,77,.6), 0 4px 6px rgba(0,0,0,.6);
+    line-height: 1.2;
+  }
+  .logo-sub {
+    font-size: clamp(.9rem, 2vw, 1.1rem);
+    color: #d97706;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .start-instructions {
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(253,211,77,.25);
+    border-radius: 16px;
+    padding: 18px 32px;
+    color: #fef3c7;
+    font-size: .97rem;
+    line-height: 1.85;
+    max-width: 500px;
+  }
+  .start-instructions span.blue { color: #93c5fd; font-weight: bold; }
+  .start-instructions span.red  { color: #fca5a5; font-weight: bold; }
+  .badge {
+    background: rgba(253,211,77,.15);
+    border: 1px solid rgba(253,211,77,.4);
+    border-radius: 12px;
+    padding: 7px 20px;
+    color: #fde68a;
+    font-size: .88rem;
+    letter-spacing: 1px;
+  }
+
+  /* ── SELECTOR DE DURACIÓN ── */
+  .duration-label {
+    color: #fde68a;
+    font-size: .95rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: .85;
+  }
+  .duration-options {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .dur-btn {
+    background: rgba(255,255,255,.08);
+    border: 2px solid rgba(253,211,77,.3);
+    border-radius: 12px;
+    color: #fde68a;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 10px 22px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: background .15s, border-color .15s, transform .1s;
+  }
+  .dur-btn:hover { background: rgba(253,211,77,.18); border-color: rgba(253,211,77,.65); }
+  .dur-btn:active { transform: scale(.95); }
+  .dur-btn.selected {
+    background: linear-gradient(135deg, #d97706, #fbbf24);
+    border-color: #fbbf24;
+    color: #1a0a00;
+    box-shadow: 0 4px 14px rgba(217,119,6,.45);
+  }
+
+  .btn-start {
+    background: linear-gradient(135deg, #d97706, #fbbf24);
+    border: none;
+    border-radius: 50px;
+    color: #1a0a00;
+    font-size: 1.4rem;
+    font-weight: 900;
+    padding: 16px 56px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    box-shadow: 0 8px 25px rgba(217,119,6,.45);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .btn-start:hover  { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(217,119,6,.6); }
+  .btn-start:active { transform: translateY(0); }
+
+  /* ── PANTALLA DE JUEGO ── */
+  #gameScreen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 1120px;
+    padding: 10px 14px;
+    gap: 10px;
+    animation: fadeIn .4s ease;
+  }
+  .game-title {
+    font-size: clamp(.85rem, 2vw, 1.15rem);
+    font-weight: 800;
+    color: #fbbf24;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    text-shadow: 0 0 15px rgba(251,191,36,.4);
+  }
+
+  /* Score bar */
+  .score-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 600px;
+  }
+  .score-box {
+    border-radius: 12px;
+    padding: 7px 24px;
+    font-size: 2rem;
+    font-weight: 900;
+    color: #fff;
+    min-width: 85px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,.35);
+  }
+  .score-box.blue { background: linear-gradient(135deg, #1e40af, #2563eb); }
+  .score-box.red  { background: linear-gradient(135deg, #991b1b, #dc2626); }
+  .timer-box {
+    background: rgba(253,211,77,.12);
+    border: 2px solid rgba(253,211,77,.4);
+    border-radius: 12px;
+    padding: 7px 18px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fde68a;
+    min-width: 95px;
+    text-align: center;
+  }
+  .timer-box.urgent { color: #fca5a5; border-color: #fca5a5; animation: pulse .6s infinite; }
+
+  /* Main layout */
+  .game-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    align-items: start;
+  }
+
+  /* ── PANELES DE EQUIPO ── */
+  .team-panel {
+    border-radius: 16px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+  .team-panel.blue { background: linear-gradient(160deg, #1e3a8a, #2563eb); }
+  .team-panel.red  { background: linear-gradient(160deg, #7f1d1d, #dc2626); }
+
+  .team-header {
+    font-size: .9rem;
+    font-weight: 800;
+    color: rgba(255,255,255,.85);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-align: center;
+  }
+  .question-box {
+    background: #fff;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: clamp(.85rem, 1.5vw, 1.05rem);
+    font-weight: 700;
+    text-align: center;
+    color: #1a1a2e;
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.4;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,.1);
+    transition: background .25s;
+  }
+  .question-box.correct { background: #bbf7d0; }
+  .question-box.wrong   { background: #fecaca; }
+
+  .options-container { display: flex; flex-direction: column; gap: 7px; }
+  .opt-btn {
+    background: rgba(255,255,255,.18);
+    border: 1.5px solid rgba(255,255,255,.3);
+    border-radius: 9px;
+    color: #fff;
+    font-size: clamp(.78rem, 1.3vw, .95rem);
+    font-weight: 600;
+    padding: 10px 12px;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background .1s, transform .1s;
+    line-height: 1.3;
+  }
+  .opt-btn:hover  { background: rgba(255,255,255,.32); }
+  .opt-btn:active { transform: scale(.97); }
+  .opt-btn.wrong-flash   { background: rgba(239,68,68,.65) !important; border-color: #f87171; }
+  .opt-btn.correct-flash { background: rgba(34,197,94,.65) !important; border-color: #86efac; }
+  .opt-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .opt-label {
+    background: rgba(255,255,255,.25);
+    border-radius: 6px;
+    font-size: .8rem;
+    font-weight: 900;
+    padding: 2px 7px;
+    flex-shrink: 0;
+    letter-spacing: 1px;
+  }
+  .key-hints {
+    display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; margin-top: 2px;
+  }
+  .key-hint {
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 5px;
+    color: rgba(255,255,255,.65);
+    font-size: .65rem; font-weight: 600; padding: 2px 6px; letter-spacing: .5px;
+  }
+
+  /* ── ARENA CENTRAL ── */
+  .arena {
+    background: linear-gradient(180deg, #fef9e7 0%, #fffbf0 60%, #fef3c7 100%);
+    border-radius: 16px;
+    padding: 14px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 330px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 20px rgba(217,119,6,.08);
+  }
+  .arena::after {
+    content: '';
+    position: absolute;
+    bottom: 44px; left: 0; right: 0;
+    height: 3px;
+    background: repeating-linear-gradient(90deg,#b45309 0,#b45309 8px,transparent 8px,transparent 16px);
+    opacity: .4;
+  }
+  .center-line {
+    position: absolute; top: 10px; bottom: 10px; left: 50%;
+    transform: translateX(-50%); width: 2px;
+    background: repeating-linear-gradient(180deg,#92400e 0,#92400e 8px,transparent 8px,transparent 16px);
+    opacity: .55; pointer-events: none;
+  }
+  .tow-scene {
+    width: 100%; height: 175px; position: relative;
+    transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  .tow-scene svg { width: 100%; height: 100%; }
+  .arena-msg {
+    font-size: 1.05rem; font-weight: 800; color: #92400e;
+    letter-spacing: 1px; text-transform: uppercase;
+    min-height: 26px; transition: color .3s;
+  }
+  .arena-msg.team1 { color: #1d4ed8; }
+  .arena-msg.team2 { color: #b91c1c; }
+  .streak-badge {
+    background: linear-gradient(135deg,#d97706,#fbbf24);
+    color: #1a0a00; font-size:.72rem; font-weight:900;
+    padding:3px 10px; border-radius:20px; letter-spacing:1px;
+    opacity:0; transition:opacity .3s;
+  }
+  .streak-badge.show { opacity:1; }
+
+  /* ── PANTALLA FINAL ── */
+  #endScreen {
+    display: none; flex-direction: column; align-items: center;
+    gap: 26px; text-align: center;
+    animation: fadeIn .5s ease; padding: 20px;
+  }
+  .end-trophy { font-size: 5rem; line-height: 1; }
+  .end-winner {
+    font-size: clamp(1.6rem,4vw,2.6rem); font-weight: 900;
+    color: #fde68a; text-shadow: 0 0 30px rgba(253,211,77,.5);
+  }
+  .end-scores { display: flex; gap: 28px; align-items: center; }
+  .end-score-box {
+    border-radius: 16px; padding: 16px 36px;
+    font-size: 2rem; font-weight: 900; color: #fff; text-align: center;
+  }
+  .end-score-box.blue { background: linear-gradient(135deg,#2563eb,#1d4ed8); }
+  .end-score-box.red  { background: linear-gradient(135deg,#dc2626,#b91c1c); }
+  .end-score-box small { display:block; font-size:.72rem; font-weight:600; letter-spacing:2px; opacity:.8; margin-bottom:4px; }
+  .end-score-sep { font-size:2rem; color:rgba(253,211,77,.5); font-weight:300; }
+  .btn-play-again {
+    background: linear-gradient(135deg,#d97706,#fbbf24);
+    border: none; border-radius: 50px; color: #1a0a00;
+    font-size: 1.25rem; font-weight: 900; padding: 15px 46px;
+    cursor: pointer; letter-spacing: 2px; text-transform: uppercase;
+    box-shadow: 0 8px 25px rgba(217,119,6,.4); transition: transform .15s;
+  }
+  .btn-play-again:hover { transform: translateY(-3px); }
+
+  /* ── ANIMACIONES ── */
+  @keyframes fadeIn { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.55} }
+  @keyframes popIn  { 0%{transform:scale(.85)} 70%{transform:scale(1.1)} 100%{transform:scale(1)} }
+  @keyframes shake  { 0%,100%{transform:translateX(0)} 25%,75%{transform:translateX(-6px)} 50%{transform:translateX(6px)} }
+  .pop   { animation: popIn .3s ease forwards; }
+  .shake { animation: shake .35s ease; }
+  .confetti-piece {
+    position:fixed; width:10px; height:14px; border-radius:2px;
+    top:-20px; animation:fall linear forwards; pointer-events:none; z-index:999;
+  }
+  @keyframes fall { to{transform:translateY(110vh) rotate(720deg)} }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ PANTALLA DE INICIO ═══════════ -->
+<div id="startScreen">
+  <div style="font-size:3.5rem">✝️</div>
+  <div class="logo-title">Tug of War<br>Conocimiento Bíblico</div>
+  <div class="logo-sub">Reina Valera 1960</div>
+  <div class="badge">📖 225+ preguntas de toda la Biblia</div>
+
+  <div class="start-instructions">
+    <b>2 equipos · ¡El más sabio en la Biblia gana!</b><br><br>
+    <span class="blue">⬅ Equipo 1 (azul)</span> usa los botones de su lado<br>
+    o las teclas <b>Q = A &nbsp;·&nbsp; W = B &nbsp;·&nbsp; E = C</b><br><br>
+    <span class="red">Equipo 2 (rojo) ➡</span> usa los botones de su lado<br>
+    o las teclas <b>U = A &nbsp;·&nbsp; I = B &nbsp;·&nbsp; O = C</b><br><br>
+    Error → espera 1 segundo e intenta de nuevo.
+  </div>
+
+  <!-- Selector de duración -->
+  <div class="duration-label">⏱ Duración del juego</div>
+  <div class="duration-options">
+    <button class="dur-btn selected" data-secs="60"  onclick="selectDuration(this)">1 min</button>
+    <button class="dur-btn"          data-secs="120" onclick="selectDuration(this)">2 min</button>
+    <button class="dur-btn"          data-secs="300" onclick="selectDuration(this)">5 min</button>
+  </div>
+
+  <button class="btn-start" onclick="startGame()">¡Empezar! ✝️</button>
+</div>
+
+<!-- ═══════════ PANTALLA DE JUEGO ═══════════ -->
+<div id="gameScreen">
+  <div class="game-title">✝️ Tug of War · Conocimiento Bíblico ✝️</div>
+  <div class="score-bar">
+    <div class="score-box blue" id="score1">0</div>
+    <div class="timer-box" id="timerDisplay">1:00</div>
+    <div class="score-box red"  id="score2">0</div>
+  </div>
+  <div class="game-main">
+
+    <!-- EQUIPO 1 (azul) -->
+    <div class="team-panel blue" id="panel1">
+      <div class="team-header">🔵 Equipo 1</div>
+      <div class="question-box" id="q1">Cargando...</div>
+      <div class="options-container" id="opts1"></div>
+      <div class="key-hints">
+        <span class="key-hint">Q = opción A</span>
+        <span class="key-hint">W = opción B</span>
+        <span class="key-hint">E = opción C</span>
+      </div>
+    </div>
+
+    <!-- ARENA CENTRAL -->
+    <div class="arena">
+      <div class="center-line"></div>
+      <div class="tow-scene" id="towScene">
+        <svg viewBox="0 0 340 160" xmlns="http://www.w3.org/2000/svg">
+          <!-- Equipo 1 (azul, izquierda) -->
+          <g transform="translate(70,95)">
+            <line x1="0" y1="0" x2="-18" y2="-40" stroke="#1d4ed8" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="-22" cy="-54" r="14" fill="#60a5fa" stroke="#1d4ed8" stroke-width="2"/>
+            <circle cx="-17" cy="-56" r="2" fill="#1e3a8a"/>
+            <path d="M-26,-50 Q-22,-47 -18,-50" stroke="#1e3a8a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <line x1="-9" y1="-25" x2="20" y2="-18" stroke="#2563eb" stroke-width="4" stroke-linecap="round"/>
+            <line x1="-18" y1="-40" x2="-30" y2="0"  stroke="#1d4ed8" stroke-width="4" stroke-linecap="round"/>
+            <line x1="-18" y1="-40" x2="-8"  y2="0"  stroke="#1d4ed8" stroke-width="4" stroke-linecap="round"/>
+            <line x1="-30" y1="0"  x2="-42" y2="0"  stroke="#1e3a8a" stroke-width="4" stroke-linecap="round"/>
+            <line x1="-8"  y1="0"  x2="-20" y2="0"  stroke="#1e3a8a" stroke-width="4" stroke-linecap="round"/>
+          </g>
+          <!-- Equipo 2 (rojo, derecha) -->
+          <g transform="translate(270,95) scale(-1,1)">
+            <line x1="0" y1="0" x2="-18" y2="-40" stroke="#b91c1c" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="-22" cy="-54" r="14" fill="#f87171" stroke="#b91c1c" stroke-width="2"/>
+            <circle cx="-17" cy="-56" r="2" fill="#7f1d1d"/>
+            <path d="M-26,-50 Q-22,-47 -18,-50" stroke="#7f1d1d" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <line x1="-9" y1="-25" x2="20" y2="-18" stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
+            <line x1="-18" y1="-40" x2="-30" y2="0"  stroke="#b91c1c" stroke-width="4" stroke-linecap="round"/>
+            <line x1="-18" y1="-40" x2="-8"  y2="0"  stroke="#b91c1c" stroke-width="4" stroke-linecap="round"/>
+            <line x1="-30" y1="0"  x2="-42" y2="0"  stroke="#7f1d1d" stroke-width="4" stroke-linecap="round"/>
+            <line x1="-8"  y1="0"  x2="-20" y2="0"  stroke="#7f1d1d" stroke-width="4" stroke-linecap="round"/>
+          </g>
+          <!-- Cuerda -->
+          <line x1="90" y1="77" x2="250" y2="77" stroke="#78350f" stroke-width="6" stroke-linecap="round"/>
+          <line x1="90" y1="73" x2="250" y2="73" stroke="#92400e" stroke-width="2" stroke-dasharray="8,6" opacity=".6"/>
+          <line x1="90" y1="81" x2="250" y2="81" stroke="#92400e" stroke-width="2" stroke-dasharray="8,6" stroke-dashoffset="4" opacity=".6"/>
+          <!-- Bandera central -->
+          <g transform="translate(170,0)">
+            <line x1="0" y1="60" x2="0" y2="77" stroke="#78350f" stroke-width="2"/>
+            <polygon points="0,60 18,68 0,76" fill="#fbbf24" stroke="#d97706" stroke-width="1.5"/>
+          </g>
+        </svg>
+      </div>
+      <div class="arena-msg" id="arenaMsg">¡Respondé rápido!</div>
+      <div class="streak-badge" id="streakBadge">🔥 RACHA x3</div>
+    </div>
+
+    <!-- EQUIPO 2 (rojo) -->
+    <div class="team-panel red" id="panel2">
+      <div class="team-header">🔴 Equipo 2</div>
+      <div class="question-box" id="q2">Cargando...</div>
+      <div class="options-container" id="opts2"></div>
+      <div class="key-hints">
+        <span class="key-hint">U = opción A</span>
+        <span class="key-hint">I = opción B</span>
+        <span class="key-hint">O = opción C</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ PANTALLA FINAL ═══════════ -->
+<div id="endScreen">
+  <div class="end-trophy" id="endTrophy">🏆</div>
+  <div class="end-winner" id="endWinner">¡Equipo 1 gana!</div>
+  <div class="end-scores">
+    <div class="end-score-box blue"><small>EQUIPO 1</small><span id="finalScore1">0</span></div>
+    <div class="end-score-sep">VS</div>
+    <div class="end-score-box red"><small>EQUIPO 2</small><span id="finalScore2">0</span></div>
+  </div>
+  <button class="btn-play-again" onclick="resetGame()">🔄 Jugar de nuevo</button>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   BANCO DE PREGUNTAS — Biblia Reina Valera 1960
+   Formato: { q, o: [correcta, falsa1, falsa2], a: 0 }
+   Se barajan las opciones al mostrar, así 'a' siempre apunta
+   a la respuesta correcta (índice 0 en los datos originales).
+═══════════════════════════════════════════════════════ */
+const BIBLE_Q = [
+  /* ── GÉNESIS ── */
+  {q:"¿Cuántos días y noches llovió durante el diluvio de Noé?",o:["40 días y 40 noches","20 días y 20 noches","7 días y 7 noches"],a:0},
+  {q:"¿Cómo se llamaba la primera mujer según Génesis?",o:["Eva","Sara","Rebeca"],a:0},
+  {q:"¿De qué árbol prohibió Dios comer a Adán y Eva?",o:["Del árbol del conocimiento del bien y del mal","Del árbol de la vida","Del árbol del jardín"],a:0},
+  {q:"¿Quién construyó el arca por mandato de Dios?",o:["Noé","Abraham","Moisés"],a:0},
+  {q:"¿Cuántos hijos tuvo Jacob?",o:["12 hijos","10 hijos","7 hijos"],a:0},
+  {q:"¿A qué tierra fue enviado José al ser vendido por sus hermanos?",o:["Egipto","Babilonia","Canaán"],a:0},
+  {q:"¿Quién fue el padre de Abraham?",o:["Taré","Sem","Nacor"],a:0},
+  {q:"¿Qué ciudad destruyó Dios junto con Sodoma por su maldad?",o:["Gomorra","Jericó","Nínive"],a:0},
+  {q:"¿Cuántos años vivió Matusalén, el hombre más longevo de la Biblia?",o:["969 años","900 años","777 años"],a:0},
+  {q:"¿Qué señal puso Dios en el cielo como señal del pacto con Noé?",o:["Un arcoíris","Una estrella","Una nube brillante"],a:0},
+  {q:"¿Cómo se llamó el hijo de promesa de Abraham y Sara?",o:["Isaac","Ismael","Jacob"],a:0},
+  {q:"¿Quiénes eran los dos hijos gemelos de Isaac?",o:["Esaú y Jacob","Caín y Abel","Efraín y Manasés"],a:0},
+  {q:"¿Qué le vendió Esaú a Jacob a cambio de un plato de guisado?",o:["Su primogenitura","Su rebaño","Su espada"],a:0},
+  {q:"¿Con qué nombre fue llamado Jacob después de luchar con el ángel?",o:["Israel","Judá","Rubén"],a:0},
+  {q:"¿Qué interpretó José para el faraón de Egipto?",o:["Sus sueños de 7 vacas gordas y 7 flacas","Una escritura en la pared","Una visión de guerra"],a:0},
+  {q:"¿Qué hicieron los hermanos de José para deshacerse de él?",o:["Lo vendieron a unos mercaderes ismaelitas","Lo mataron","Lo abandonaron en el desierto"],a:0},
+  {q:"¿Cuántos años tenía Abraham cuando nació Isaac?",o:["100 años","75 años","90 años"],a:0},
+  {q:"¿A dónde llevó Abraham a Isaac para sacrificarlo?",o:["Al monte Moriah","Al monte Sinaí","Al monte Carmelo"],a:0},
+  {q:"¿Qué proveyó Dios como sustituto de Isaac en el sacrificio?",o:["Un carnero enredado en un matorral","Un cordero sin mancha","Un toro"],a:0},
+  {q:"¿Qué creó Dios en el primer día según Génesis 1?",o:["La luz","El sol y la luna","Los animales"],a:0},
+  {q:"¿Qué hizo Dios en el séptimo día de la creación?",o:["Descansó y santificó ese día","Creó al hombre","Creó los mares"],a:0},
+  {q:"¿De qué fue formado el primer hombre según Génesis 2?",o:["Del polvo de la tierra","Del agua","Del barro del río"],a:0},
+  {q:"¿De qué fue formada la primera mujer según Génesis 2?",o:["De la costilla del hombre","Del polvo","Del agua"],a:0},
+  {q:"¿Por qué Dios confundió los idiomas en Babel?",o:["Para detener la construcción de una torre hasta el cielo","Para castigar la idolatría","Para dispersar al pueblo que no quería emigrar"],a:0},
+  {q:"¿Cuántos años vivió Adán según Génesis?",o:["930 años","777 años","600 años"],a:0},
+  {q:"¿Quién fue el primer hijo de Adán y Eva?",o:["Caín","Abel","Set"],a:0},
+  {q:"¿Quién era el sobrino de Abraham que escapó de Sodoma?",o:["Lot","Isaac","Ismael"],a:0},
+  /* ── ÉXODO ── */
+  {q:"¿Qué tipo de zarza vio Moisés en el monte Horeb?",o:["Una zarza que ardía y no se consumía","Una zarza de oro","Una zarza con flores blancas"],a:0},
+  {q:"¿Cuántas plagas envió Dios sobre Egipto?",o:["10 plagas","7 plagas","12 plagas"],a:0},
+  {q:"¿Cuál fue la última plaga sobre Egipto?",o:["La muerte de los primogénitos","Las langostas","Las tinieblas"],a:0},
+  {q:"¿Qué comida especial envió Dios a los israelitas en el desierto?",o:["Maná","Pan de cebada","Leche y miel"],a:0},
+  {q:"¿En qué monte recibió Moisés los Diez Mandamientos?",o:["Monte Sinaí","Monte Carmelo","Monte Tabor"],a:0},
+  {q:"¿Qué mar cruzaron los israelitas al salir de Egipto?",o:["El Mar Rojo","El río Jordán","El lago de Galilea"],a:0},
+  {q:"¿Qué construyeron los israelitas mientras Moisés estaba en el monte?",o:["Un becerro de oro","Un templo de madera","Un altar de piedra"],a:0},
+  {q:"¿Quién era el hermano mayor de Moisés?",o:["Aarón","Josué","Caleb"],a:0},
+  {q:"¿Cómo se llamaba la hermana de Moisés?",o:["Miriam","Débora","Jocabed"],a:0},
+  {q:"¿Qué fiesta instituyó Dios para recordar la salida de Egipto?",o:["La Pascua","El Pentecostés","Los Tabernáculos"],a:0},
+  {q:"¿Qué contenía el arca del pacto?",o:["Las tablas de la ley, el maná y la vara de Aarón","Los Salmos de David","Las ofrendas del pueblo"],a:0},
+  /* ── NÚMEROS / DEUTERONOMIO ── */
+  {q:"¿Cuántos años vagaron los israelitas en el desierto por su incredulidad?",o:["40 años","20 años","70 años"],a:0},
+  {q:"¿Quién fue el espía que junto con Josué creyó que podían tomar Canaán?",o:["Caleb","Moisés","Aarón"],a:0},
+  {q:"¿Qué habló con Balaam en el camino para detenerlo?",o:["Su asna (burra)","Un ángel visible","Una paloma"],a:0},
+  /* ── JOSUÉ ── */
+  {q:"¿Cómo cayeron los muros de Jericó?",o:["Con el sonido de trompetas y los gritos del pueblo","Con un terremoto enviado por Dios","Con catapultas del ejército israelita"],a:0},
+  {q:"¿Quién fue el sucesor de Moisés como líder de Israel?",o:["Josué","Caleb","Aarón"],a:0},
+  {q:"¿Qué colocó Rahab en su ventana para ser librada cuando cayó Jericó?",o:["Un cordón de grana","Una tela blanca","Una paloma"],a:0},
+  {q:"¿Cuántos días marcharon los israelitas alrededor de Jericó?",o:["7 días","3 días","14 días"],a:0},
+  {q:"¿Quién detuvo el sol para ganar una batalla en Gabaón?",o:["Josué","David","Gedeón"],a:0},
+  /* ── JUECES ── */
+  {q:"¿Quién venció a los madianitas con solo 300 hombres?",o:["Gedeón","Sansón","Débora"],a:0},
+  {q:"¿En qué residía el secreto de la fuerza de Sansón?",o:["En su cabello, pues era nazareo","En su espada especial","En su oración diaria"],a:0},
+  {q:"¿Quién traicionó a Sansón revelando el secreto de su fuerza?",o:["Dalila","Jezabel","Herodías"],a:0},
+  {q:"¿Qué usó Sansón para matar a mil filisteos?",o:["La quijada de un asno","El cuerno de un toro","El hueso de un caballo"],a:0},
+  {q:"¿Qué animal mató Sansón con sus manos desnudas?",o:["Un león","Un oso","Un toro"],a:0},
+  /* ── RUT ── */
+  {q:"¿De qué país era Rut, la nuera de Noemí?",o:["Moab","Egipto","Babilonia"],a:0},
+  {q:"¿Cómo se llamaba la suegra de Rut?",o:["Noemí","Ana","Débora"],a:0},
+  {q:"¿Con quién se casó Rut en Belén?",o:["Booz","Elimelec","Mahlón"],a:0},
+  /* ── SAMUEL ── */
+  {q:"¿Quién fue el primer rey de Israel?",o:["Saúl","David","Salomón"],a:0},
+  {q:"¿Quién ungió a David como rey de Israel?",o:["Samuel","Natán","Aarón"],a:0},
+  {q:"¿A qué gigante filisteo mató David con su honda?",o:["Goliat","Sísara","Og"],a:0},
+  {q:"¿De qué ciudad era David?",o:["Belén","Hebrón","Jerusalén"],a:0},
+  {q:"¿Cómo se llamaba la madre del profeta Samuel?",o:["Ana","Noemí","Rut"],a:0},
+  {q:"¿Quién era el sacerdote que crió a Samuel en el tabernáculo?",o:["Elí","Aarón","Sadoc"],a:0},
+  {q:"¿Qué instrumento tocaba David para calmar el espíritu perturbado de Saúl?",o:["El arpa","La flauta","La trompeta"],a:0},
+  {q:"¿Con quién pecó el rey David al hacerla su esposa?",o:["Betsabé","Abigail","Mical"],a:0},
+  {q:"¿Quién fue el hijo de David que se rebeló contra él?",o:["Absalón","Salomón","Adonías"],a:0},
+  /* ── REYES ── */
+  {q:"¿Quién construyó el primer templo de Jerusalén?",o:["Salomón","David","Ezequías"],a:0},
+  {q:"¿Qué pidió Salomón a Dios cuando se le apareció en sueños en Gabaón?",o:["Sabiduría para gobernar el pueblo","Riquezas y larga vida","Victoria sobre sus enemigos"],a:0},
+  {q:"¿Cuántas esposas y concubinas tuvo el rey Salomón?",o:["700 esposas y 300 concubinas","100 esposas y 50 concubinas","12 esposas"],a:0},
+  {q:"¿De qué reino era la reina que visitó a Salomón?",o:["Del reino de Sabá","De Egipto","De Babilonia"],a:0},
+  {q:"¿Qué profeta desafió a los 450 profetas de Baal en el monte Carmelo?",o:["Elías","Eliseo","Jeremías"],a:0},
+  {q:"¿En qué fue llevado Elías al cielo según 2 Reyes 2?",o:["En un torbellino","En un carro de fuego solo","En una nube"],a:0},
+  {q:"¿Quién fue la malvada reina esposa del rey Acab?",o:["Jezabel","Atalía","Herodías"],a:0},
+  {q:"¿Qué curó el profeta Naamán al bañarse siete veces en el Jordán?",o:["La lepra","La ceguera","La parálisis"],a:0},
+  {q:"¿Qué multiplicó el profeta Eliseo para una viuda pobre?",o:["El aceite de su vasija","El pan de su despensa","El agua de su pozo"],a:0},
+  {q:"¿Quién fue el rey que hizo retroceder el sol diez grados como señal?",o:["Ezequías","Josías","Salomón"],a:0},
+  {q:"¿Qué rey destruyó el primer templo de Jerusalén?",o:["Nabucodonosor","Ciro","Senaquerib"],a:0},
+  /* ── ESDRAS / NEHEMÍAS / ESTER ── */
+  {q:"¿Qué reconstruyó Nehemías al regresar a Jerusalén?",o:["Los muros de la ciudad","El templo de Dios","El palacio real"],a:0},
+  {q:"¿Quién quería exterminar a todos los judíos en el libro de Ester?",o:["Amán","Nabucodonosor","Herodes"],a:0},
+  {q:"¿Cómo se llamaba el rey persa que eligió a Ester como reina?",o:["Asuero","Ciro","Darío"],a:0},
+  /* ── JOB ── */
+  {q:"¿Cuántos hijos e hijas tenía Job antes de sus pruebas?",o:["7 hijos y 3 hijas","10 hijos","5 hijos y 5 hijas"],a:0},
+  {q:"¿Quién afligió a Job con dolorosas llagas?",o:["Satanás, con permiso de Dios","Sus enemigos del pueblo","Una enfermedad natural"],a:0},
+  /* ── SALMOS ── */
+  {q:"¿Quién escribió la mayoría de los Salmos?",o:["David","Salomón","Moisés"],a:0},
+  {q:"Completa: 'El Señor es mi pastor; nada me ___'",o:["Faltará","Angustiará","Fallará"],a:0},
+  {q:"¿Cuántos salmos tiene el libro de Salmos?",o:["150","120","175"],a:0},
+  {q:"¿Cuál es el salmo que comienza con 'El Señor es mi pastor'?",o:["Salmo 23","Salmo 91","Salmo 1"],a:0},
+  {q:"¿Cuál es el salmo más largo de toda la Biblia?",o:["Salmo 119","Salmo 150","Salmo 78"],a:0},
+  {q:"¿Qué salmo dice 'Los cielos cuentan la gloria de Dios'?",o:["Salmo 19","Salmo 8","Salmo 29"],a:0},
+  {q:"¿Cuál es el salmo más corto de la Biblia?",o:["Salmo 117 (solo 2 versículos)","Salmo 134","Salmo 150"],a:0},
+  /* ── PROVERBIOS / ECLESIASTÉS ── */
+  {q:"¿Qué libro dice 'El temor de Jehová es el principio de la sabiduría'?",o:["Proverbios 9:10","Eclesiastés 12:13","Job 28:28"],a:0},
+  {q:"¿Qué libro de la Biblia comienza con 'Vanidad de vanidades, todo es vanidad'?",o:["Eclesiastés","Proverbios","Job"],a:0},
+  {q:"¿Qué dice Proverbios 22:6 sobre la educación de los hijos?",o:["Instruye al niño en su camino, y cuando fuere viejo no se apartará","Castiga a tu hijo y te dará descanso","El hijo sabio alegra al padre"],a:0},
+  {q:"¿Quién escribió principalmente el libro de Proverbios?",o:["Salomón","David","Esdras"],a:0},
+  /* ── ISAÍAS ── */
+  {q:"¿Qué profeta dijo 'una virgen concebirá y dará a luz un hijo, y llamará su nombre Emmanuel'?",o:["Isaías (7:14)","Jeremías","Ezequiel"],a:0},
+  {q:"¿Cuántos capítulos tiene el libro de Isaías?",o:["66 capítulos","52 capítulos","48 capítulos"],a:0},
+  {q:"¿Qué profeta tuvo una visión de serafines alrededor del trono de Dios?",o:["Isaías","Ezequiel","Daniel"],a:0},
+  {q:"¿Qué versículo dice 'con sus llagas fuimos nosotros curados'?",o:["Isaías 53:5","Salmo 22:16","Jeremías 17:14"],a:0},
+  /* ── JEREMÍAS ── */
+  {q:"¿Qué profeta es conocido como 'el profeta llorón'?",o:["Jeremías","Isaías","Ezequiel"],a:0},
+  {q:"¿Qué profeta anunció el nuevo pacto que Dios haría con Israel?",o:["Jeremías 31:31","Ezequiel 36","Isaías 42"],a:0},
+  /* ── EZEQUIEL ── */
+  {q:"¿Qué visión tuvo Ezequiel en el capítulo 37?",o:["El valle de los huesos secos que revivieron","Las ruedas de fuego","El templo restaurado del futuro"],a:0},
+  /* ── DANIEL ── */
+  {q:"¿En qué fosa fue lanzado Daniel por sus enemigos?",o:["En el foso de los leones","En una cisterna de barro","En el horno de fuego"],a:0},
+  {q:"¿Cuántos amigos de Daniel fueron echados al horno de fuego ardiendo?",o:["3 (Sadrac, Mesac y Abed-nego)","2 amigos","4 amigos"],a:0},
+  {q:"¿Quién interpretó la escritura misteriosa en la pared del banquete de Belsasar?",o:["Daniel","Nabucodonosor","El sumo sacerdote"],a:0},
+  {q:"¿Cuántos años estuvo el pueblo de Judá cautivo en Babilonia?",o:["70 años","40 años","50 años"],a:0},
+  /* ── PROFETAS MENORES ── */
+  {q:"¿A qué ciudad fue enviado el profeta Jonás a predicar?",o:["Nínive","Babilonia","Sodoma"],a:0},
+  {q:"¿Cuántos días estuvo Jonás en el vientre del gran pez?",o:["3 días y 3 noches","7 días","40 días"],a:0},
+  {q:"¿Qué profeta se casó con una mujer infiel como señal del amor de Dios por Israel?",o:["Oseas","Amós","Miqueas"],a:0},
+  {q:"¿Qué profeta predijo que el Mesías nacería en Belén?",o:["Miqueas 5:2","Isaías 7:14","Zacarías 9:9"],a:0},
+  {q:"¿Qué profeta predijo que el rey de Sión entraría a Jerusalén montado en un asno?",o:["Zacarías","Isaías","Malaquías"],a:0},
+  {q:"¿Cuál es el último libro del Antiguo Testamento?",o:["Malaquías","Zacarías","Joel"],a:0},
+  {q:"¿Cuál es el libro más corto del Antiguo Testamento?",o:["Abdías (21 versículos)","Nahúm","Hageo"],a:0},
+  /* ── VIDA DE JESÚS ── */
+  {q:"¿En qué ciudad nació Jesús?",o:["Belén","Nazaret","Jerusalén"],a:0},
+  {q:"¿Cómo se llamaba la madre de Jesús?",o:["María","Marta","Salomé"],a:0},
+  {q:"¿Cómo se llamaba el padre adoptivo de Jesús?",o:["José","Joaquín","Zacarías"],a:0},
+  {q:"¿Quién bautizó a Jesús?",o:["Juan el Bautista","Pedro","Andrés"],a:0},
+  {q:"¿En qué río fue bautizado Jesús?",o:["En el río Jordán","En el mar de Galilea","En el río Nilo"],a:0},
+  {q:"¿Cuántos días estuvo Jesús siendo tentado en el desierto?",o:["40 días","20 días","7 días"],a:0},
+  {q:"¿Quién tentó a Jesús en el desierto?",o:["El diablo","Los fariseos","Herodes Antipas"],a:0},
+  {q:"¿Cuántos apóstoles eligió Jesús?",o:["12 apóstoles","10 apóstoles","7 apóstoles"],a:0},
+  {q:"¿Cuál fue el primer milagro de Jesús?",o:["Convertir agua en vino en las bodas de Caná","Curar a un ciego de nacimiento","Multiplicar los panes y los peces"],a:0},
+  {q:"¿Cuántos panes y peces usó Jesús para alimentar a 5,000 personas?",o:["5 panes y 2 peces","7 panes y 3 peces","10 panes y 5 peces"],a:0},
+  {q:"¿Cómo se llamaba el apóstol que traicionó a Jesús?",o:["Judas Iscariote","Pedro","Tomás"],a:0},
+  {q:"¿Por cuántas piezas de plata vendió Judas a Jesús?",o:["30 piezas de plata","20 piezas de plata","50 piezas de plata"],a:0},
+  {q:"¿Quién negó conocer a Jesús tres veces antes del canto del gallo?",o:["Pedro","Tomás","Juan"],a:0},
+  {q:"¿A quién se le apareció primero Jesús después de resucitar?",o:["A María Magdalena","A Pedro","A Juan"],a:0},
+  {q:"¿Cuántos días estuvo Jesús en la tierra después de su resurrección?",o:["40 días","3 días","7 días"],a:0},
+  {q:"¿Dónde ascendió Jesús al cielo?",o:["En el monte de los Olivos","En el monte Sinaí","En el monte Tabor"],a:0},
+  {q:"¿Quién era el gobernador romano que ordenó la crucifixión de Jesús?",o:["Poncio Pilato","Herodes Antipas","Cayo Calígula"],a:0},
+  {q:"¿Quién fue liberado en lugar de Jesús por pedido del pueblo?",o:["Barrabás","Judas","Caifás"],a:0},
+  {q:"¿Quiénes aparecieron junto a Jesús en la transfiguración?",o:["Moisés y Elías","Abraham e Isaac","Enoc y Elías"],a:0},
+  {q:"¿Qué discípulo dudó de la resurrección de Jesús hasta ver sus heridas?",o:["Tomás","Pedro","Felipe"],a:0},
+  {q:"¿Dónde fue arrestado Jesús?",o:["En el huerto de Getsemaní","En el templo","En Betania"],a:0},
+  {q:"¿Cuál era el oficio de Mateo antes de ser apóstol?",o:["Cobrador de impuestos","Pescador","Carpintero"],a:0},
+  {q:"¿Cuál era el oficio de Pedro, Andrés, Santiago y Juan antes de seguir a Jesús?",o:["Pescadores","Carpinteros","Pastores de ovejas"],a:0},
+  {q:"¿Cómo se llamaba el ciego de Jericó que clamó a Jesús y fue sanado?",o:["Bartimeo","Zaqueo","Lázaro"],a:0},
+  {q:"¿Cómo se llamaba el recaudador que subió a un árbol para ver a Jesús?",o:["Zaqueo","Mateo","Leví"],a:0},
+  {q:"¿A qué árbol subió Zaqueo para ver pasar a Jesús?",o:["Un sicómoro","Una higuera","Un cedro"],a:0},
+  {q:"¿A quién resucitó Jesús en Betania después de 4 días muerto?",o:["Lázaro","Jairo","El hijo de la viuda de Naín"],a:0},
+  {q:"¿Cómo se llaman las dos hermanas de Lázaro?",o:["Marta y María","Ana y Rebeca","Lea y Raquel"],a:0},
+  {q:"¿Quién fue el sumo sacerdote que condenó a Jesús?",o:["Caifás","Ananías","Anás"],a:0},
+  {q:"¿Cuántos años tenía Jesús cuando sus padres lo encontraron con los doctores en el templo?",o:["12 años","8 años","15 años"],a:0},
+  {q:"¿Cuántos años tenía Jesús cuando comenzó su ministerio público?",o:["Alrededor de 30 años","25 años","33 años"],a:0},
+  {q:"¿En qué mar caminó Jesús sobre las aguas?",o:["En el mar de Galilea","En el Mar Rojo","En el mar Mediterráneo"],a:0},
+  {q:"¿Cuál es el único milagro de Jesús registrado en los cuatro evangelios?",o:["La multiplicación de los panes y los peces","La resurrección de Lázaro","La curación de un ciego"],a:0},
+  /* ── PARÁBOLAS ── */
+  {q:"¿En qué evangelio está la parábola del hijo pródigo?",o:["Lucas 15","Mateo 20","Juan 10"],a:0},
+  {q:"¿En qué evangelio está la parábola del buen samaritano?",o:["Lucas 10","Marcos 8","Mateo 15"],a:0},
+  {q:"¿Cuántas ovejas tenía el pastor en la parábola de la oveja perdida?",o:["100 ovejas","99 ovejas","10 ovejas"],a:0},
+  {q:"¿Cuántas monedas tenía la mujer en la parábola de la moneda perdida?",o:["10 monedas","7 monedas","100 monedas"],a:0},
+  {q:"¿Cuántas vírgenes había en la parábola de las diez vírgenes?",o:["10 (5 prudentes y 5 insensatas)","5 vírgenes","12 vírgenes"],a:0},
+  {q:"¿Cuántos talentos le dieron al siervo que lo enterró en tierra?",o:["1 talento","2 talentos","5 talentos"],a:0},
+  {q:"¿Cómo comienza el Padrenuestro según Mateo 6:9?",o:["Padre nuestro que estás en los cielos","Santo eres Señor Dios nuestro","En el nombre del Padre y del Hijo"],a:0},
+  {q:"¿Qué dijo Jesús que debemos buscar primeramente?",o:["El reino de Dios y su justicia","La paz del mundo","La sabiduría divina"],a:0},
+  {q:"¿Cuál es el mandamiento más grande según Jesús en Mateo 22?",o:["Amar a Dios con todo el corazón, alma y mente","No matar a nadie","No robarle a nadie"],a:0},
+  /* ── EVANGELIO DE JUAN ── */
+  {q:"¿Con qué palabras comienza el Evangelio de Juan?",o:["En el principio era el Verbo","Al principio Dios creó","Este es el principio del evangelio"],a:0},
+  {q:"¿Qué es Dios según 1 Juan 4:8?",o:["Amor","Luz","Espíritu"],a:0},
+  {q:"¿Qué dijo Jesús ser en Juan 14:6?",o:["El camino, la verdad y la vida","La luz del mundo","La puerta de las ovejas"],a:0},
+  {q:"¿Qué dijo Jesús ser en Juan 6:35?",o:["El pan de vida","El agua viva","La vid verdadera"],a:0},
+  {q:"¿Cuántos capítulos tiene el Evangelio de Juan?",o:["21 capítulos","28 capítulos","16 capítulos"],a:0},
+  /* ── HECHOS ── */
+  {q:"¿Cuántas personas se convirtieron el día de Pentecostés?",o:["Unas 3,000 personas","120 personas","5,000 personas"],a:0},
+  {q:"¿Qué señal acompañó la venida del Espíritu Santo en Pentecostés?",o:["Viento recio y lenguas de fuego","Una paloma blanca","Un trueno y relámpago"],a:0},
+  {q:"¿Quién fue el primer mártir cristiano que murió apedreado?",o:["Esteban","Santiago","Pablo"],a:0},
+  {q:"¿Cómo se llamaba el perseguidor de los cristianos convertido en el camino a Damasco?",o:["Saulo (después Pablo)","Herodes","Silas"],a:0},
+  {q:"¿En qué ciudad se llamaron por primera vez los discípulos 'cristianos'?",o:["En Antioquía","En Jerusalén","En Corinto"],a:0},
+  {q:"¿En qué ciudad fueron encarcelados Pablo y Silas y ocurrió un terremoto a medianoche?",o:["En Filipos","En Corinto","En Éfeso"],a:0},
+  {q:"¿Quién fue el compañero misionero de Pablo en su primer viaje misionero?",o:["Bernabé","Silas","Timoteo"],a:0},
+  /* ── EPÍSTOLAS ── */
+  {q:"¿Cuál es el versículo más conocido de la Biblia sobre el amor de Dios?",o:["Juan 3:16","Romanos 10:9","Hechos 2:38"],a:0},
+  {q:"Completa: 'Porque de tal manera amó Dios al mundo, que ha dado a su Hijo ___'",o:["Unigénito","Primogénito","Santo"],a:0},
+  {q:"¿Qué dice Romanos 6:23 que es la paga del pecado?",o:["La muerte","El sufrimiento","El juicio eterno"],a:0},
+  {q:"¿Qué capítulo de 1 Corintios describe el amor cristiano?",o:["Capítulo 13","Capítulo 12","Capítulo 15"],a:0},
+  {q:"Completa Filipenses 4:13: 'Todo lo puedo en Cristo que me ___'",o:["Fortalece","Ayuda","Sostiene"],a:0},
+  {q:"¿Cuántos frutos del Espíritu se mencionan en Gálatas 5:22-23?",o:["9 frutos","7 frutos","12 frutos"],a:0},
+  {q:"¿Qué carta del NT dice 'Porque por gracia sois salvos por medio de la fe'?",o:["Efesios 2:8","Romanos 5:1","Gálatas 3:11"],a:0},
+  {q:"¿Qué capítulo del NT habla de los héroes de la fe?",o:["Hebreos 11","Santiago 2","1 Pedro 1"],a:0},
+  {q:"¿Qué dice Hebreos 11:1 que es la fe?",o:["La certeza de lo que se espera, la convicción de lo que no se ve","La confianza total en Dios","El amor a Dios por encima de todo"],a:0},
+  {q:"¿Qué dice Santiago 2:26 sobre la fe sin obras?",o:["La fe sin obras está muerta","La fe sola es suficiente","Las obras no importan si hay fe"],a:0},
+  {q:"¿Qué dice Romanos 8:28 sobre los que aman a Dios?",o:["Todas las cosas les ayudan a bien","Dios los protege de todo mal","Nada los puede separar de Dios"],a:0},
+  {q:"¿De qué viene la fe según Romanos 10:17?",o:["Del oír la Palabra de Dios","Del corazón humano","De las buenas obras"],a:0},
+  {q:"¿A qué tribu de Israel pertenecía el apóstol Pablo?",o:["A la tribu de Benjamín","A la tribu de Leví","A la tribu de Judá"],a:0},
+  {q:"¿Quién era el médico que acompañó a Pablo y escribió Lucas y Hechos?",o:["Lucas","Marcos","Felipe"],a:0},
+  /* ── APOCALIPSIS ── */
+  {q:"¿Cuántas iglesias de Asia se mencionan en Apocalipsis 2-3?",o:["7 iglesias","12 iglesias","5 iglesias"],a:0},
+  {q:"¿Cuál es el número de la bestia mencionado en Apocalipsis 13?",o:["666","777","616"],a:0},
+  {q:"¿Quién escribió el libro de Apocalipsis?",o:["El apóstol Juan","Pablo","Pedro"],a:0},
+  {q:"¿En qué isla estaba Juan cuando recibió las visiones del Apocalipsis?",o:["En la isla de Patmos","En la isla de Malta","En la isla de Chipre"],a:0},
+  {q:"¿Cuántos sellos tiene el libro que abre el Cordero en Apocalipsis?",o:["7 sellos","12 sellos","6 sellos"],a:0},
+  {q:"¿Cuántos jinetes aparecen en Apocalipsis 6?",o:["4 jinetes","7 jinetes","12 jinetes"],a:0},
+  /* ── DATOS GENERALES ── */
+  {q:"¿Cuántos libros tiene el Nuevo Testamento?",o:["27 libros","39 libros","22 libros"],a:0},
+  {q:"¿Cuántos libros tiene el Antiguo Testamento?",o:["39 libros","27 libros","40 libros"],a:0},
+  {q:"¿Cuántos libros tiene la Biblia completa (RVR)?",o:["66 libros","73 libros","60 libros"],a:0},
+  {q:"¿Cuántos evangelios hay en el Nuevo Testamento?",o:["4 evangelios","3 evangelios","5 evangelios"],a:0},
+  {q:"¿Cuál es el evangelio más corto?",o:["Marcos","Juan","Lucas"],a:0},
+  {q:"¿Cuál es el evangelio más largo?",o:["Lucas","Mateo","Juan"],a:0},
+  {q:"¿Cuáles son los primeros 5 libros de la Biblia?",o:["Génesis, Éxodo, Levítico, Números, Deuteronomio","Génesis, Job, Salmos, Proverbios, Eclesiastés","Mateo, Marcos, Lucas, Juan, Hechos"],a:0},
+  {q:"¿Cuál es el primer libro del Nuevo Testamento?",o:["Mateo","Marcos","Juan"],a:0},
+  {q:"¿Qué significa el nombre 'Jesús'?",o:["Jehová salva / Salvador","Hijo de Dios","El Ungido de Dios"],a:0},
+  {q:"¿Qué significa el nombre 'Emmanuel' según Mateo 1:23?",o:["Dios con nosotros","Dios salva","El escogido de Dios"],a:0},
+  {q:"¿Qué significa el nombre 'Israel' dado a Jacob?",o:["El que lucha con Dios (príncipe de Dios)","Pueblo de Dios","Heredero de la promesa"],a:0},
+  {q:"¿Cuál es el nombre propio de Dios revelado a Moisés en Éxodo 3?",o:["YO SOY EL QUE SOY (YHWH / Jehová)","El Altísimo","El Todopoderoso"],a:0},
+  {q:"¿De qué tribu de Israel descendía Jesús?",o:["De la tribu de Judá","De la tribu de Leví","De la tribu de Efraín"],a:0},
+  {q:"¿Cuántas tribus tenía Israel?",o:["12 tribus","10 tribus","7 tribus"],a:0},
+  /* ── ÚLTIMA CENA ── */
+  {q:"¿Qué celebraban Jesús y sus discípulos en la Última Cena?",o:["La Pascua judía","El Pentecostés","Los Tabernáculos"],a:0},
+  {q:"¿Qué representaba el pan partido en la Última Cena?",o:["El cuerpo de Jesús","La ley de Moisés","La promesa de Abraham"],a:0},
+  {q:"¿Qué representaba la copa de vino en la Última Cena?",o:["La sangre de Jesús y el nuevo pacto","La alegría del reino de Dios","El río de agua de vida"],a:0},
+  {q:"¿Cuál fue la última frase de Jesús en la cruz según Juan 19:30?",o:["Consumado es","Padre, en tus manos encomiendo mi espíritu","Dios mío, ¿por qué me has abandonado?"],a:0},
+  /* ── JUAN EL BAUTISTA ── */
+  {q:"¿Quién era el padre del Juan el Bautista?",o:["Zacarías","José","Simeón"],a:0},
+  {q:"¿Cómo se llamaba la madre del Juan el Bautista?",o:["Elisabet","Ana","María"],a:0},
+  {q:"¿Qué comía Juan el Bautista en el desierto?",o:["Langostas y miel silvestre","Pan y agua","Frutas y verduras"],a:0},
+  /* ── TABERNÁCULO / TEMPLO ── */
+  {q:"¿Cuántos compartimentos principales tenía el tabernáculo?",o:["2 (lugar santo y lugar santísimo)","3 compartimentos","Solo uno"],a:0},
+  {q:"¿Qué había detrás del velo en el lugar santísimo?",o:["El arca del pacto","El altar del incienso","El candelabro de oro"],a:0},
+  {q:"¿Qué ocurrió con el velo del templo cuando Jesús murió en la cruz?",o:["Se rasgó en dos, de arriba abajo","Desapareció","Cayó al suelo"],a:0},
+  /* ── PROMESAS ── */
+  {q:"¿Qué promete Dios en Jeremías 29:11?",o:["Planes de bienestar y esperanza para su pueblo","Riquezas a los que le obedezcan","Protección de todos los enemigos"],a:0},
+  {q:"¿Qué promesa hace Dios en Josué 1:9?",o:["'Esfuérzate y sé valiente... Jehová tu Dios estará contigo'","Victoria en todas las batallas","La tierra prometida a sus hijos"],a:0},
+  {q:"¿Qué promesa hace Jesús en Juan 14:3?",o:["Que volverá para llevarnos a estar con Él","Que enviará al Espíritu Santo","Que el Padre responderá todas las oraciones"],a:0},
+  /* ── CREACIÓN ── */
+  {q:"¿Qué creó Dios en el sexto día según Génesis 1?",o:["Los animales y al ser humano","Las estrellas","Los peces y aves"],a:0},
+  {q:"¿En qué día creó Dios el sol, la luna y las estrellas?",o:["En el cuarto día","En el primer día","En el tercer día"],a:0},
+  /* ── MILAGROS ── */
+  {q:"¿Quién fue el profeta que hizo flotar un hacha de hierro en el río?",o:["Eliseo","Elías","Isaías"],a:0},
+  {q:"¿Quién resucitó al hijo de la sunamita en 2 Reyes?",o:["Eliseo","Elías","Ezequiel"],a:0},
+  {q:"¿Qué milagro realizó Jesús en el estanque de Betesda?",o:["Sanó a un paralítico de 38 años","Devolvió la vista a un ciego","Resucitó a un muerto"],a:0},
+  /* ── APÓSTOLES ── */
+  {q:"¿Cuál de los 12 apóstoles era hermano de Pedro?",o:["Andrés","Juan","Santiago"],a:0},
+  {q:"¿Cuál de los 12 apóstoles era hermano de Juan?",o:["Santiago","Pedro","Felipe"],a:0},
+  {q:"¿Qué apóstol fue el primero en ser martirizado de los Doce?",o:["Santiago, hijo de Zebedeo","Pedro","Esteban"],a:0},
+];
+
+/* ═══════════════════════════════════════════
+   CONFIGURACIÓN Y ESTADO
+═══════════════════════════════════════════ */
+const SHIFT_STEP = 10;
+let selectedDuration = 60; // segundos (por defecto 1 minuto)
+
+let state = {
+  active: false, timeLeft: 60, scores: [0,0], streaks: [0,0],
+  questions: [null,null], interval: null,
+  usedIdxs: new Set(), blocked: [false,false],
+};
+
+/* ── Selector de duración ── */
+function selectDuration(btn) {
+  document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedDuration = parseInt(btn.dataset.secs, 10);
+}
+
+/* ── Selección de pregunta sin repetir ── */
+function getQuestion() {
+  if (state.usedIdxs.size >= BIBLE_Q.length) state.usedIdxs.clear();
+  let idx;
+  do { idx = Math.floor(Math.random() * BIBLE_Q.length); }
+  while (state.usedIdxs.has(idx));
+  state.usedIdxs.add(idx);
+  const base = BIBLE_Q[idx];
+  const correctText = base.o[base.a];
+  const opts = [...base.o];
+  for (let i = opts.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [opts[i], opts[j]] = [opts[j], opts[i]];
+  }
+  return { q: base.q, o: opts, a: opts.indexOf(correctText) };
+}
+
+/* ── Renderizar pregunta ── */
+function renderQuestion(team) {
+  const q = state.questions[team];
+  document.getElementById(`q${team+1}`).textContent = q.q;
+  const cont = document.getElementById(`opts${team+1}`);
+  cont.innerHTML = '';
+  ['A','B','C'].forEach((lbl, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.id = `opt${team+1}_${i}`;
+    btn.innerHTML = `<span class="opt-label">${lbl}</span>${q.o[i]}`;
+    btn.addEventListener('click', () => pressOption(team, i));
+    cont.appendChild(btn);
+  });
+}
+
+/* ── Seleccionar opción ── */
+function pressOption(team, optIdx) {
+  if (!state.active || state.blocked[team]) return;
+  const q = state.questions[team];
+  if (optIdx === q.a) {
+    state.scores[team]++;
+    state.streaks[team]++;
+    state.streaks[1-team] = 0;
+    flashQuestion(team, true);
+    updateScore();
+    updateRope();
+    showArenaMsg(team);
+    showStreak(team);
+    setTimeout(() => {
+      state.questions[team] = getQuestion();
+      renderQuestion(team);
+      document.getElementById(`q${team+1}`).classList.remove('correct','wrong');
+    }, 350);
+  } else {
+    state.streaks[team] = 0;
+    flashOption(team, optIdx);
+    blockTeam(team, 1000);
+  }
+}
+
+function flashQuestion(team, correct) {
+  const el = document.getElementById(`q${team+1}`);
+  el.classList.remove('correct','wrong','pop');
+  void el.offsetWidth;
+  el.classList.add(correct ? 'correct' : 'wrong', 'pop');
+}
+
+function flashOption(team, idx) {
+  const btn = document.getElementById(`opt${team+1}_${idx}`);
+  if (!btn) return;
+  btn.classList.add('wrong-flash');
+  setTimeout(() => btn.classList.remove('wrong-flash'), 400);
+}
+
+function blockTeam(team, ms) {
+  state.blocked[team] = true;
+  document.getElementById(`opts${team+1}`).querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+  setTimeout(() => {
+    state.blocked[team] = false;
+    document.getElementById(`opts${team+1}`).querySelectorAll('.opt-btn').forEach(b => b.disabled = false);
+  }, ms);
+}
+
+/* ── Teclado físico ── */
+document.addEventListener('keydown', e => {
+  if (!state.active) return;
+  const keyMap = {
+    KeyQ:[0,0], KeyW:[0,1], KeyE:[0,2],  // Equipo 1 → A B C
+    KeyU:[1,0], KeyI:[1,1], KeyO:[1,2],  // Equipo 2 → A B C
+  };
+  if (e.code in keyMap) {
+    e.preventDefault();
+    const [team, optIdx] = keyMap[e.code];
+    pressOption(team, optIdx);
+  }
+});
+
+/* ── Marcador ── */
+function updateScore() {
+  document.getElementById('score1').textContent = state.scores[0];
+  document.getElementById('score2').textContent = state.scores[1];
+}
+
+/* ── Timer ── */
+function formatTime(t) {
+  return `${Math.floor(t/60)}:${(t%60).toString().padStart(2,'0')}`;
+}
+function updateTimer() {
+  const el = document.getElementById('timerDisplay');
+  el.textContent = formatTime(state.timeLeft);
+  el.classList.toggle('urgent', state.timeLeft <= 10);
+}
+
+/* ── Cuerda ── */
+function updateRope() {
+  const diff  = state.scores[1] - state.scores[0];
+  const scene = document.getElementById('towScene');
+  const crossThreshold = Math.round((122/340) * scene.offsetWidth);
+  const shift = Math.max(-crossThreshold, Math.min(crossThreshold, diff * SHIFT_STEP));
+  scene.style.transform = `translateX(${shift}px)`;
+  if (state.active && Math.abs(shift) >= crossThreshold) {
+    clearInterval(state.interval);
+    state.active = false;
+    document.getElementById('arenaMsg').textContent = '¡Cruzó la línea! 🏁';
+    setTimeout(endGame, 700);
+  }
+}
+
+/* ── Mensajes ── */
+function showArenaMsg(team) {
+  const m = [['¡Correcto! 📖','¡Bien hecho! ✝️','¡Gloria a Dios! 🙌','¡Excelente! ⭐'],
+             ['¡Correcto! 📖','¡Muy bien! 🔥','¡Amén! ✝️','¡Perfecto! 🎯']];
+  const el = document.getElementById('arenaMsg');
+  el.textContent = m[team][Math.floor(Math.random()*4)];
+  el.className = `arena-msg team${team+1}`;
+}
+function showStreak(team) {
+  const s = state.streaks[team];
+  if (s >= 3) {
+    const el = document.getElementById('streakBadge');
+    el.textContent = `🔥 ¡RACHA x${s}! Equipo ${team+1}`;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2200);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   FLUJO PRINCIPAL
+═══════════════════════════════════════════ */
+function startGame() {
+  state = {
+    active: false,
+    timeLeft: selectedDuration,
+    scores: [0,0], streaks: [0,0],
+    questions: [getQuestion(), getQuestion()],
+    interval: null,
+    usedIdxs: state.usedIdxs,
+    blocked: [false,false],
+  };
+
+  renderQuestion(0); renderQuestion(1);
+  updateScore(); updateTimer(); updateRope();
+
+  // Mostrar duración seleccionada en el título del timer
+  document.getElementById('timerDisplay').textContent = formatTime(selectedDuration);
+  document.getElementById('arenaMsg').textContent = '¡En sus marcas!';
+  document.getElementById('arenaMsg').className = 'arena-msg';
+
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('endScreen').style.display   = 'none';
+  document.getElementById('gameScreen').style.display  = 'flex';
+
+  // Cuenta regresiva 3-2-1
+  let cnt = 3;
+  const el = document.getElementById('arenaMsg');
+  el.textContent = cnt;
+  const cd = setInterval(() => {
+    cnt--;
+    if (cnt > 0) { el.textContent = cnt; }
+    else {
+      clearInterval(cd);
+      el.textContent = '¡YA! 🏁';
+      state.active = true;
+      state.interval = setInterval(() => {
+        state.timeLeft--;
+        updateTimer();
+        if (state.timeLeft <= 0) {
+          clearInterval(state.interval);
+          state.active = false;
+          endGame();
+        }
+      }, 1000);
+    }
+  }, 850);
+}
+
+function endGame() {
+  const [s1,s2] = state.scores;
+  const trophy  = document.getElementById('endTrophy');
+  const winner  = document.getElementById('endWinner');
+  if (s1 > s2) {
+    trophy.textContent = '🏆'; winner.textContent = '¡Equipo 1 gana! 🔵'; winner.style.color = '#93c5fd';
+    launchConfetti('#3b82f6');
+  } else if (s2 > s1) {
+    trophy.textContent = '🏆'; winner.textContent = '¡Equipo 2 gana! 🔴'; winner.style.color = '#fca5a5';
+    launchConfetti('#ef4444');
+  } else {
+    trophy.textContent = '🤝'; winner.textContent = '¡Empate! — ¡Ambos son sabios!'; winner.style.color = '#fde68a';
+  }
+  document.getElementById('finalScore1').textContent = s1;
+  document.getElementById('finalScore2').textContent = s2;
+  document.getElementById('gameScreen').style.display = 'none';
+  document.getElementById('endScreen').style.display  = 'flex';
+}
+
+function resetGame() {
+  document.getElementById('endScreen').style.display  = 'none';
+  document.getElementById('startScreen').style.display = 'flex';
+}
+
+function launchConfetti(color) {
+  const cols = [color,'#fbbf24','#34d399','#a78bfa','#f9a8d4','#fff'];
+  for (let i=0;i<80;i++) setTimeout(()=>{
+    const el=document.createElement('div');
+    el.className='confetti-piece';
+    el.style.cssText=`left:${Math.random()*100}vw;background:${cols[Math.floor(Math.random()*cols.length)]};width:${6+Math.random()*10}px;height:${10+Math.random()*10}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${1.5+Math.random()*2}s;transform:rotate(${Math.random()*360}deg);`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),4000);
+  },i*35);
+}
+</script>
+</body>
+</html>
