@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feelings & Emotions 🌈</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Kalam:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Kalam', cursive;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+    /* Fixed starry background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Ccircle cx='50' cy='80' r='2' fill='white' opacity='0.4'/%3E%3Ccircle cx='150' cy='30' r='1.5' fill='white' opacity='0.3'/%3E%3Ccircle cx='300' cy='60' r='2' fill='white' opacity='0.5'/%3E%3Ccircle cx='370' cy='150' r='1.5' fill='white' opacity='0.3'/%3E%3Ccircle cx='80' cy='200' r='2' fill='white' opacity='0.4'/%3E%3Ccircle cx='230' cy='180' r='1' fill='white' opacity='0.3'/%3E%3Ccircle cx='320' cy='250' r='2' fill='white' opacity='0.4'/%3E%3Ccircle cx='120' cy='350' r='1.5' fill='white' opacity='0.3'/%3E%3Ccircle cx='260' cy='320' r='2' fill='white' opacity='0.5'/%3E%3Ccircle cx='40' cy='380' r='1' fill='white' opacity='0.3'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── SCREENS ── */
+    .screen {
+      display: none;
+      width: 100%;
+      max-width: 520px;
+      padding: 20px;
+      position: relative;
+      z-index: 1;
+      animation: fadeIn 0.4s ease;
+    }
+    .screen.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+    /* ── BUTTONS ── */
+    .btn {
+      font-family: 'Kalam', cursive;
+      font-weight: 700;
+      font-size: 1.25em;
+      padding: 14px 36px;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      display: inline-block;
+      text-align: center;
+    }
+    .btn:hover  { transform: scale(1.06); }
+    .btn:active { transform: scale(0.95); }
+
+    .btn-primary {
+      background: linear-gradient(45deg, #f7971e, #ffd200);
+      color: #fff;
+      box-shadow: 0 5px 18px rgba(247,151,30,0.45);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .btn-ghost {
+      background: rgba(255,255,255,0.28);
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.5);
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.4); }
+
+    /* ── PROGRESS ── */
+    .progress-wrap {
+      background: rgba(255,255,255,0.3);
+      border-radius: 20px;
+      height: 10px;
+      margin: 6px 0 18px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f7971e, #ffd200);
+      border-radius: 20px;
+      transition: width 0.4s ease;
+    }
+    .progress-label {
+      color: rgba(255,255,255,0.9);
+      font-size: 0.95em;
+      text-align: right;
+    }
+
+    /* ── CARD (shared) ── */
+    .card {
+      background: #fff;
+      border-radius: 28px;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.18);
+      padding: 30px 28px;
+      text-align: center;
+    }
+
+    /* ════════════════════════════════════
+       WELCOME SCREEN
+    ════════════════════════════════════ */
+    #screen-welcome { text-align: center; }
+
+    .title-main {
+      font-family: 'Pacifico', cursive;
+      font-size: 2.6em;
+      color: #fff;
+      text-shadow: 3px 4px 8px rgba(0,0,0,0.25);
+      line-height: 1.1;
+    }
+    .title-sub {
+      color: rgba(255,255,255,0.92);
+      font-size: 1.1em;
+      margin: 10px 0 24px;
+    }
+    .welcome-emoji {
+      font-size: 110px;
+      display: block;
+      margin: 0 auto 28px;
+      animation: wobble 2s infinite;
+      line-height: 1;
+    }
+    @keyframes wobble {
+      0%,100% { transform: rotate(-6deg) scale(1); }
+      50%      { transform: rotate(6deg) scale(1.08); }
+    }
+
+    /* ════════════════════════════════════
+       LEARN SCREEN
+    ════════════════════════════════════ */
+    #screen-learn .screen-heading {
+      font-family: 'Pacifico', cursive;
+      font-size: 1.55em;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .learn-card {
+      animation: slideInRight 0.4s ease;
+      cursor: pointer;
+      user-select: none;
+    }
+    @keyframes slideInRight {
+      from { transform: translateX(80px); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+    .learn-card:hover { transform: scale(1.02); transition: transform 0.2s; }
+
+    .lc-emoji {
+      font-size: 100px;
+      display: block;
+      margin: 0 auto 8px;
+      transition: transform 0.2s;
+      line-height: 1.1;
+    }
+    .lc-emoji.pop {
+      animation: emojiPop 0.4s ease;
+    }
+    @keyframes emojiPop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.35) rotate(-8deg); }
+      70%  { transform: scale(0.9) rotate(4deg); }
+      100% { transform: scale(1); }
+    }
+    .lc-english {
+      font-family: 'Pacifico', cursive;
+      font-size: 2.4em;
+      margin: 4px 0 2px;
+    }
+    .lc-divider {
+      width: 50px; height: 3px;
+      background: #eee;
+      border-radius: 10px;
+      margin: 10px auto;
+    }
+    .lc-spanish-label {
+      font-size: 0.85em;
+      color: #bbb;
+      letter-spacing: 0.03em;
+    }
+    .lc-spanish {
+      font-size: 1.6em;
+      color: #888;
+      margin-top: 2px;
+    }
+    .lc-tap-hint {
+      font-size: 0.8em;
+      color: #ccc;
+      margin-top: 12px;
+    }
+
+    /* ── SPEAK BUTTON ── */
+    .speak-btn {
+      background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+      border: none;
+      border-radius: 50%;
+      width: 56px;
+      height: 56px;
+      font-size: 1.6em;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(161,140,209,0.45);
+      transition: transform 0.15s, box-shadow 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 14px;
+    }
+    .speak-btn:hover  { transform: scale(1.12); box-shadow: 0 6px 18px rgba(161,140,209,0.55); }
+    .speak-btn:active { transform: scale(0.92); }
+    .speak-btn.speaking {
+      animation: speakerPulse 0.5s infinite alternate;
+    }
+    @keyframes speakerPulse {
+      from { box-shadow: 0 0 0 0 rgba(161,140,209,0.6); }
+      to   { box-shadow: 0 0 0 12px rgba(161,140,209,0); }
+    }
+
+    /* Quiz speak row */
+    .q-speak-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .q-speak-btn {
+      background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+      border: none;
+      border-radius: 50px;
+      padding: 7px 18px;
+      font-family: 'Kalam', cursive;
+      font-size: 1em;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(161,140,209,0.4);
+      transition: transform 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .q-speak-btn:hover  { transform: scale(1.07); }
+    .q-speak-btn:active { transform: scale(0.94); }
+    .q-speak-btn.speaking { animation: speakerPulse 0.5s infinite alternate; }
+
+    .learn-nav {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 18px;
+    }
+
+    /* ════════════════════════════════════
+       QUIZ INTRO SCREEN
+    ════════════════════════════════════ */
+    #screen-quiz-intro { text-align: center; }
+    .qi-emoji {
+      font-size: 90px;
+      display: block;
+      margin: 20px auto;
+      animation: bounce 1s infinite alternate;
+    }
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to   { transform: translateY(-18px); }
+    }
+    .qi-title {
+      font-family: 'Pacifico', cursive;
+      font-size: 2.2em;
+      color: #fff;
+      text-shadow: 2px 3px 7px rgba(0,0,0,0.22);
+    }
+    .qi-subtitle {
+      color: rgba(255,255,255,0.9);
+      font-size: 1.15em;
+      margin: 10px 0 28px;
+      line-height: 1.5;
+    }
+    .qi-btns { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+
+    /* ════════════════════════════════════
+       QUIZ SCREEN
+    ════════════════════════════════════ */
+    #screen-quiz { text-align: center; }
+
+    .quiz-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .quiz-score-badge {
+      background: rgba(255,255,255,0.28);
+      border-radius: 20px;
+      padding: 5px 16px;
+      color: #fff;
+      font-size: 1.1em;
+    }
+    .quiz-hearts { font-size: 1.4em; letter-spacing: 2px; }
+
+    .quiz-question-card { margin-bottom: 14px; }
+    .q-label { font-size: 0.9em; color: #bbb; margin-bottom: 4px; }
+    .q-word {
+      font-family: 'Pacifico', cursive;
+      font-size: 2.6em;
+      margin: 2px 0;
+      line-height: 1.1;
+    }
+    .q-instruction { font-size: 0.95em; color: #aaa; margin-top: 4px; }
+
+    .feedback-row {
+      min-height: 42px;
+      font-size: 1.3em;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      margin: 2px 0 10px;
+    }
+    .fb-correct { color: #27ae60; }
+    .fb-wrong   { color: #e74c3c; }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .opt-btn {
+      background: #fff;
+      border: 4px solid transparent;
+      border-radius: 22px;
+      padding: 16px 10px;
+      font-size: 58px;
+      line-height: 1.1;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+      box-shadow: 0 5px 14px rgba(0,0,0,0.12);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .opt-btn span.opt-label {
+      font-family: 'Kalam', cursive;
+      font-size: 0.28em;
+      color: #ccc;
+      font-weight: 700;
+    }
+    .opt-btn:hover:not(:disabled) { transform: scale(1.07); border-color: #ffd200; }
+    .opt-btn:disabled { cursor: default; }
+    .opt-btn.correct { background: #eafaf1; border-color: #27ae60; animation: correctPop 0.45s ease; }
+    .opt-btn.wrong   { background: #fdf0ef; border-color: #e74c3c; animation: shakeIt 0.5s ease; }
+    .opt-btn.reveal  { background: #eafaf1; border-color: #27ae60; }
+
+    @keyframes correctPop {
+      0%   { transform: scale(1); }
+      45%  { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shakeIt {
+      0%,100% { transform: translateX(0); }
+      20%     { transform: translateX(-9px); }
+      40%     { transform: translateX(9px); }
+      60%     { transform: translateX(-6px); }
+      80%     { transform: translateX(6px); }
+    }
+
+    /* ════════════════════════════════════
+       RESULTS SCREEN
+    ════════════════════════════════════ */
+    #screen-results { text-align: center; }
+    .res-title {
+      font-family: 'Pacifico', cursive;
+      font-size: 2.2em;
+      color: #fff;
+      text-shadow: 2px 3px 7px rgba(0,0,0,0.22);
+      margin-bottom: 18px;
+    }
+    .res-card { padding: 36px 28px; }
+    .res-stars { font-size: 54px; margin: 10px 0; letter-spacing: 6px; }
+    .res-score {
+      font-family: 'Pacifico', cursive;
+      font-size: 3em;
+      margin: 10px 0;
+    }
+    .res-msg { font-size: 1.35em; color: #666; margin: 10px 0 20px; line-height: 1.4; }
+    .res-btns { display: flex; flex-direction: column; gap: 12px; align-items: center; margin-top: 20px; }
+
+    /* ════════════════════════════════════
+       CONFETTI
+    ════════════════════════════════════ */
+    .confetti-piece {
+      position: fixed;
+      top: -30px;
+      font-size: 1.6em;
+      pointer-events: none;
+      z-index: 9999;
+      animation: confettiFall linear forwards;
+    }
+    @keyframes confettiFall {
+      to { transform: translateY(110vh) rotate(900deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════ WELCOME ═══════════════════════ -->
+<div class="screen active" id="screen-welcome">
+  <h1 class="title-main">Feelings &amp;<br>Emotions 🌈</h1>
+  <p class="title-sub">¡Aprende cómo nos sentimos en inglés!</p>
+  <span class="welcome-emoji" id="welcome-emoji">😊</span>
+  <br>
+  <button class="btn btn-primary" onclick="startLearning()">¡Empezar a aprender! 🌟</button>
+</div>
+
+<!-- ═══════════════════════ LEARN ═══════════════════════ -->
+<div class="screen" id="screen-learn">
+  <h2 class="screen-heading">📚 ¡Conoce las palabras!</h2>
+  <p class="progress-label" id="learn-label">1 de 11</p>
+  <div class="progress-wrap"><div class="progress-fill" id="learn-bar" style="width:9%"></div></div>
+
+  <div class="card learn-card" id="learn-card" onclick="popEmoji()">
+    <span class="lc-emoji" id="lc-emoji">😊</span>
+    <div class="lc-english" id="lc-english" style="color:#FFD700">Happy</div>
+    <div class="lc-divider"></div>
+    <div class="lc-spanish-label">en español:</div>
+    <div class="lc-spanish" id="lc-spanish">Feliz</div>
+    <button class="speak-btn" id="learn-speak-btn" onclick="event.stopPropagation(); speakWord()" title="Escuchar pronunciación">🔊</button>
+    <div class="lc-tap-hint">👆 ¡Tócame para verme reaccionar!</div>
+  </div>
+
+  <div class="learn-nav">
+    <button class="btn btn-ghost" id="btn-prev" onclick="prevCard()" style="visibility:hidden">← Atrás</button>
+    <button class="btn btn-primary" id="btn-next" onclick="nextCard()">Siguiente →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ QUIZ INTRO ═══════════════════════ -->
+<div class="screen" id="screen-quiz-intro">
+  <h1 class="qi-title">¡Hora de jugar! 🎮</h1>
+  <span class="qi-emoji">🎯</span>
+  <p class="qi-subtitle">
+    Elige el emoji correcto para<br>cada palabra en inglés.<br>¡Tú puedes! 💪
+  </p>
+  <div class="qi-btns">
+    <button class="btn btn-primary" onclick="startQuiz()">¡Jugar ahora! 🚀</button>
+    <button class="btn btn-ghost" onclick="startLearning()">📚 Repasar primero</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ QUIZ ═══════════════════════ -->
+<div class="screen" id="screen-quiz">
+  <div class="quiz-top">
+    <span class="quiz-score-badge">⭐ <span id="q-score">0</span> / <span id="q-total">11</span></span>
+    <span class="quiz-hearts" id="q-hearts">❤️❤️❤️</span>
+  </div>
+
+  <p class="progress-label" id="quiz-label">Pregunta 1 de 11</p>
+  <div class="progress-wrap"><div class="progress-fill" id="quiz-bar" style="width:0%"></div></div>
+
+  <div class="card quiz-question-card">
+    <p class="q-label">¿Cuál emoji muestra…?</p>
+    <div class="q-speak-row">
+      <div class="q-word" id="q-word">Happy</div>
+      <button class="q-speak-btn" id="quiz-speak-btn" onclick="speakWord()">🔊 Escuchar</button>
+    </div>
+    <p class="q-instruction">¡Elige el emoji correcto! 👇</p>
+  </div>
+
+  <div class="feedback-row" id="feedback"></div>
+
+  <div class="options-grid" id="options-grid">
+    <!-- generado por JS -->
+  </div>
+</div>
+
+<!-- ═══════════════════════ RESULTS ═══════════════════════ -->
+<div class="screen" id="screen-results">
+  <h1 class="res-title" id="res-title">¡Felicitaciones! 🎉</h1>
+  <div class="card res-card">
+    <div class="res-stars" id="res-stars">⭐⭐⭐</div>
+    <div class="res-score" id="res-score" style="color:#f7971e">11/11</div>
+    <div class="res-msg" id="res-msg">¡Eres una superestrella del inglés!</div>
+  </div>
+  <div class="res-btns">
+    <button class="btn btn-primary" onclick="startQuiz()">¡Jugar de nuevo! 🔄</button>
+    <button class="btn btn-ghost" onclick="startLearning()">📚 Repasar palabras</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════ SPEECH ═══════════════════════ */
+let currentWord = '';
+
+function speakWord() {
+  if (!('speechSynthesis' in window)) return;
+  // Cancel any ongoing speech first
+  window.speechSynthesis.cancel();
+
+  const utt       = new SpeechSynthesisUtterance(currentWord);
+  utt.lang        = 'en-US';
+  utt.rate        = 0.72;   // slower — easier for kids
+  utt.pitch       = 1.15;   // slightly higher, friendlier
+  utt.volume      = 1;
+
+  // Visual feedback: pulse the button while speaking
+  const btns = [
+    document.getElementById('learn-speak-btn'),
+    document.getElementById('quiz-speak-btn')
+  ];
+  btns.forEach(b => b && b.classList.add('speaking'));
+
+  utt.onend = utt.onerror = () => {
+    btns.forEach(b => b && b.classList.remove('speaking'));
+  };
+
+  // Chrome requires a brief delay on first call
+  setTimeout(() => window.speechSynthesis.speak(utt), 80);
+}
+
+function autoSpeak(word, delayMs) {
+  currentWord = word;
+  setTimeout(speakWord, delayMs);
+}
+
+/* ═══════════════════════ DATA ═══════════════════════ */
+const EMOTIONS = [
+  { word:'Happy',     emoji:'😊', spanish:'Feliz',         color:'#e6a817' },
+  { word:'Shy',       emoji:'😳', spanish:'Tímida',        color:'#e84d9c' },
+  { word:'Silly',     emoji:'🤪', spanish:'Tonta',         color:'#e8462a' },
+  { word:'Surprised', emoji:'😲', spanish:'Sorprendida',   color:'#8e44ad' },
+  { word:'Excited',   emoji:'🤩', spanish:'Emocionada',    color:'#d35400' },
+  { word:'Sad',       emoji:'😢', spanish:'Triste',        color:'#2471a3' },
+  { word:'Angry',     emoji:'😠', spanish:'Enojada',       color:'#c0392b' },
+  { word:'Scared',    emoji:'😨', spanish:'Asustada',      color:'#6c3483' },
+  { word:'Bored',     emoji:'😒', spanish:'Aburrida',      color:'#616a6b' },
+  { word:'Worried',   emoji:'😟', spanish:'Preocupada',    color:'#1e8449' },
+  { word:'Tired',     emoji:'😴', spanish:'Cansada',       color:'#2471a3' },
+];
+
+/* ═══════════════════════ HELPERS ═══════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  // re-trigger animation
+  el.style.animation = 'none';
+  el.offsetHeight;
+  el.style.animation = '';
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ═══════════════════════ WELCOME ═══════════════════════ */
+const welcomeEmojis = EMOTIONS.map(e => e.emoji);
+let wIdx = 0;
+setInterval(() => {
+  wIdx = (wIdx + 1) % welcomeEmojis.length;
+  const el = document.getElementById('welcome-emoji');
+  if (el) el.textContent = welcomeEmojis[wIdx];
+}, 900);
+
+/* ═══════════════════════ LEARN ═══════════════════════ */
+let learnIdx = 0;
+
+function startLearning() {
+  learnIdx = 0;
+  renderLearnCard();
+  showScreen('screen-learn');
+}
+
+function renderLearnCard() {
+  const e = EMOTIONS[learnIdx];
+  document.getElementById('lc-emoji').textContent    = e.emoji;
+  document.getElementById('lc-english').textContent  = e.word;
+  document.getElementById('lc-english').style.color  = e.color;
+  document.getElementById('lc-spanish').textContent  = e.spanish;
+  document.getElementById('learn-label').textContent = `${learnIdx + 1} de ${EMOTIONS.length}`;
+  document.getElementById('learn-bar').style.width   = `${((learnIdx + 1) / EMOTIONS.length) * 100}%`;
+
+  document.getElementById('btn-prev').style.visibility = learnIdx > 0 ? 'visible' : 'hidden';
+  const btnNext = document.getElementById('btn-next');
+  btnNext.textContent = learnIdx < EMOTIONS.length - 1 ? 'Siguiente →' : '¡A jugar! 🎮';
+
+  // slide animation
+  const card = document.getElementById('learn-card');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = 'slideInRight 0.4s ease';
+
+  // Auto-pronounce after card slides in
+  autoSpeak(e.word, 520);
+}
+
+function popEmoji() {
+  const el = document.getElementById('lc-emoji');
+  el.classList.remove('pop');
+  el.offsetHeight;
+  el.classList.add('pop');
+}
+
+function nextCard() {
+  if (learnIdx < EMOTIONS.length - 1) { learnIdx++; renderLearnCard(); }
+  else showScreen('screen-quiz-intro');
+}
+function prevCard() {
+  if (learnIdx > 0) { learnIdx--; renderLearnCard(); }
+}
+
+/* ═══════════════════════ QUIZ ═══════════════════════ */
+let questions   = [];
+let qIdx        = 0;
+let score       = 0;
+let hearts      = 3;
+let canAnswer   = true;
+let nextTimer   = null;
+
+const CORRECT_MSGS = [
+  '¡Muy bien! 🌟', '¡Excelente! ⭐', '¡Correcto! 🎉',
+  '¡Genial! 🌈', '¡Perfecto! ✨', '¡Increíble! 👏', '¡Así se hace! 💪'
+];
+const WRONG_MSGS = [
+  '¡Casi! Esta es la correcta 👇', '¡No te rindas! 💪', '¡Mírala bien! 👇'
+];
+
+function startQuiz() {
+  score    = 0;
+  hearts   = 3;
+  qIdx     = 0;
+  questions = shuffle(EMOTIONS);
+  renderQuizQuestion();
+  showScreen('screen-quiz');
+}
+
+function updateHeartsDisplay() {
+  const h = Math.max(hearts, 0);
+  document.getElementById('q-hearts').textContent = '❤️'.repeat(h) + '🖤'.repeat(3 - h);
+}
+
+function renderQuizQuestion() {
+  if (qIdx >= questions.length || hearts <= 0) {
+    setTimeout(showResults, 400);
+    return;
+  }
+
+  canAnswer = true;
+  clearTimeout(nextTimer);
+
+  const cur = questions[qIdx];
+  document.getElementById('q-word').textContent       = cur.word;
+  document.getElementById('q-word').style.color       = cur.color;
+  document.getElementById('quiz-label').textContent   = `Pregunta ${qIdx + 1} de ${questions.length}`;
+  document.getElementById('quiz-bar').style.width     = `${(qIdx / questions.length) * 100}%`;
+  document.getElementById('feedback').textContent     = '';
+  document.getElementById('feedback').className       = 'feedback-row';
+  document.getElementById('q-score').textContent      = score;
+
+  updateHeartsDisplay();
+
+  // Auto-pronounce the word when question appears
+  autoSpeak(cur.word, 400);
+
+  // 4 options: 1 correct + 3 wrong
+  const wrong = shuffle(EMOTIONS.filter(e => e.word !== cur.word)).slice(0, 3);
+  const opts  = shuffle([cur, ...wrong]);
+
+  const grid = document.getElementById('options-grid');
+  grid.innerHTML = '';
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = `${opt.emoji}`;
+    btn.onclick = () => checkAnswer(btn, opt.word === cur.word, cur);
+    grid.appendChild(btn);
+  });
+}
+
+function checkAnswer(btn, isCorrect, cur) {
+  if (!canAnswer) return;
+  canAnswer = false;
+
+  const fb = document.getElementById('feedback');
+  disableOptions();
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    score++;
+    document.getElementById('q-score').textContent = score;
+    fb.textContent  = CORRECT_MSGS[Math.floor(Math.random() * CORRECT_MSGS.length)];
+    fb.className    = 'feedback-row fb-correct';
+    playTone(true);
+    spawnConfetti(8);
+    nextTimer = setTimeout(() => { qIdx++; renderQuizQuestion(); }, 1100);
+  } else {
+    btn.classList.add('wrong');
+    hearts--;
+    updateHeartsDisplay();
+    fb.textContent = WRONG_MSGS[Math.floor(Math.random() * WRONG_MSGS.length)];
+    fb.className   = 'feedback-row fb-wrong';
+    playTone(false);
+    // reveal correct
+    setTimeout(() => revealCorrect(cur), 450);
+    nextTimer = setTimeout(() => { qIdx++; renderQuizQuestion(); }, 2100);
+  }
+}
+
+function disableOptions() {
+  document.querySelectorAll('#options-grid .opt-btn').forEach(b => b.disabled = true);
+}
+
+function revealCorrect(cur) {
+  document.querySelectorAll('#options-grid .opt-btn').forEach(btn => {
+    if (btn.textContent.trim() === cur.emoji) btn.classList.add('reveal');
+  });
+}
+
+/* ═══════════════════════ RESULTS ═══════════════════════ */
+function showResults() {
+  const total = questions.length;
+  const pct   = score / total;
+  let stars, msg, title;
+
+  if (pct === 1) {
+    stars = '⭐⭐⭐'; title = '¡Eres una campeona! 🏆';
+    msg   = '¡Puntaje perfecto! ¡Eres una superestrella del inglés! 🌟';
+    setTimeout(() => spawnConfetti(40), 300);
+  } else if (pct >= 0.75) {
+    stars = '⭐⭐'; title = '¡Muy bien hecho! 🌟';
+    msg   = '¡Qué buen trabajo! ¡Un poco más de práctica y lo logras! 💪';
+    setTimeout(() => spawnConfetti(20), 300);
+  } else if (pct >= 0.5) {
+    stars = '⭐'; title = '¡Buen intento! 👍';
+    msg   = '¡Sigue practicando! ¡Tú puedes aprender todas las palabras! 😊';
+  } else {
+    stars = '💫'; title = '¡No te rindas! 💪';
+    msg   = '¡Vuelve a repasar las palabras y lo harás mejor! 🌈';
+  }
+
+  document.getElementById('res-title').textContent = title;
+  document.getElementById('res-stars').textContent = stars;
+  document.getElementById('res-score').textContent = `${score}/${total}`;
+  document.getElementById('res-msg').textContent   = msg;
+  showScreen('screen-results');
+}
+
+/* ═══════════════════════ AUDIO ═══════════════════════ */
+function playTone(correct) {
+  try {
+    const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.28, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
+
+    if (correct) {
+      osc.frequency.setValueAtTime(524, ctx.currentTime);
+      osc.frequency.setValueAtTime(659, ctx.currentTime + 0.12);
+      osc.frequency.setValueAtTime(784, ctx.currentTime + 0.24);
+    } else {
+      osc.frequency.setValueAtTime(320, ctx.currentTime);
+      osc.frequency.setValueAtTime(260, ctx.currentTime + 0.22);
+    }
+
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.55);
+  } catch(_) {}
+}
+
+/* ═══════════════════════ CONFETTI ═══════════════════════ */
+const CONFETTI_EMOJIS = ['⭐','🌟','✨','🎉','🌈','💫','🎊','🏆','🦋','💖','🌸'];
+
+function spawnConfetti(count) {
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className   = 'confetti-piece';
+      el.textContent = CONFETTI_EMOJIS[Math.floor(Math.random() * CONFETTI_EMOJIS.length)];
+      el.style.left  = Math.random() * 98 + 'vw';
+      const dur      = (Math.random() * 1.4 + 0.9).toFixed(2);
+      el.style.animationDuration = dur + 's';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), (parseFloat(dur) + 0.1) * 1000);
+    }, i * 75);
+  }
+}
+</script>
+</body>
+</html>
